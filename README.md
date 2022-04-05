@@ -1,1 +1,3 @@
-# phase-fixer
+# Phase Fixer
+
+By grintroy
