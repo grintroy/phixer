@@ -1,5 +1,6 @@
 {
-  // // Test. Populate two arrays with sine wave values.
+  // Test. Populate two arrays with sine wave values.
+
   // const audio1 = []
   // const audio2 = []
   // const phaseDifference =  45 * (Math.PI / 180) // in radians
@@ -19,12 +20,50 @@
   // }
 }
 
+const nameNumbersSF = 3
+
+const audioContext = new AudioContext()
+
+let takes = []
+
+class Take {
+  constructor(buffer, name) {
+    this.name = name
+    this.player = new Tone.Player(buffer, console.log(`${this.name} is loaded to the Player`))
+  }
+}
+
+function readFile(files) {
+
+  // https://codepen.io/dmack/pen/VLxpyv
+
+  for (let file of files) {
+    const fileReader = new FileReader
+    fileReader.readAsArrayBuffer(file)
+    fileReader.onload = () => {
+      console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size/1024/1024*100))/100} MB)`)
+      audioContext.decodeAudioData(fileReader.result, (buffer) => {
+        for (var channel = 0; channel < buffer.numberOfChannels; channel++) {
+
+          // The input file can be multichannel but it needs to include only one "." symbol
+          takes.push(new Take(buffer.getChannelData(channel), file.name.split(".")[0] + "_" + channel.toString().padStart(nameNumbersSF, "0")))
+        }
+      })
+    }
+  }
+}
+
+
 function setup() {
 
 }
 
 function draw() {
 
+}
+
+function keyPressed() {
+  console.log(takes[0].buffer);
 }
 
 function corellationValue(channel1, channel2, precision) {
