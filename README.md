@@ -1,4 +1,4 @@
-# Phase Fixer
+# PHIxer
 
 By Gregory Troinenko
 

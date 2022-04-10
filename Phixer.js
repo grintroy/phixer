@@ -1,57 +1,77 @@
+const context = new Tone.Context()
+
 class Phixer {
 
-	static takes = []
+	constructor() {
+		this.input = document.getElementById("upload")
+		this.input.onchange = () => {
+			let files = this.input.files
+			Tone.start()
+			this.readFiles(files)
+		}
 
-  static Take = class {
-    constructor(buffer, name) {
-      this.name = name
-      this.player = new Tone.Player(buffer, console.log(`${this.name} is loaded to the Player`))
-      this.buffer = this.player._buffer._buffer
-      this.sampleTime = Tone.Transport.sampleTime
-    }
-  }
+		this.takes = []
+		this.preferences = {
+	    "inPoint": 0, // in seconds
+	    "outPoint": 3, // in seconds
+	    "duration": 3, // in seconds
+	    "targetLCC": 1, // target linear corellation coefficient
+	    "analysisSampleRate": 100, // in samples per second
+	    "primaryTrack": 0, // index in the takes array
+	    "fadeTime": 0.02 // in seconds
+	  }
+	}
 
-  static preferences = {
-    "inPoint": 0, // in seconds
-    "outPoint": 3, // in seconds
-    "duration": 3, // in seconds
-    "targetLCC": 1, // target linear corellation coefficient 
-    "analysisSampleRate": 100, // in samples per second
-    "primaryTrack": 0, // index in the takes array
-    "fadeTime": 0.02 // in seconds
-  }
+	static Take = class {
+		constructor(name, buffer, duration, sampleRate) {
+			this.name = name
+			this.arrayBuffer = buffer
+			this.duration = duration // in seconds
+			this.sampleRate = sampleRate
 
-	static readFile(files) {
+			this.audioBuffer = context.createBuffer(1, duration * sampleRate, sampleRate)
+			for (var i = 0; i < buffer.length; i++) {
+				this.audioBuffer.getChannelData(0)[i] = buffer[i]
+			}
+
+			this.player = new Tone.Player(this.audioBuffer, console.log(this.name + " is loaded.")).toDestination()
+		}
+	}
+
+	readFiles(files) {
 
 		const nameNumbersSF = 2 // significant figures for the take name index
 
 		// https://codepen.io/dmack/pen/VLxpyv
-	
+
 		for (let file of files) {
 			const fileReader = new FileReader
 			fileReader.readAsArrayBuffer(file)
 			fileReader.onload = () => {
 				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size/1024/1024*100))/100} MB)`)
-				audioContext.decodeAudioData(fileReader.result, (buffer) => {
-					for (var channel = 0; channel < buffer.numberOfChannels; channel++) {
+				context.decodeAudioData(fileReader.result).then((buffer) => {
+					for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
 
 						// The input file can be multichannel but it needs to include only one "." symbol
-						Phixer.takes.push(new Phixer.Take(buffer.getChannelData(channel), file.name.split(".")[0] + "_" + (channel + 1).toString().padStart(nameNumbersSF, "0")))
+
+						const filename = file.name.split(".")[0] + "_" + (channel + 1).toString().padStart(nameNumbersSF, "0")
+
+						this.takes.push(new Phixer.Take(filename, buffer.getChannelData(channel), buffer.duration, buffer.sampleRate))
 					}
 				})
 			}
 		}
 	}
 
-  static analysePhase(streams) {
+	analysePhase(streams) {
 
-    for (let stream of streams) {
-      stream = this.changeLength(stream)
-    }
+    // for (let stream of streams) {
+    //   stream = this.changeLength(stream)
+    // }
 
   }
 
-  static resample(take) {
+  resample(take) {
 
 		const stream = take.buffer
 		let newStream = []
@@ -66,14 +86,14 @@ class Phixer {
 
   }
 
-  static changeLength(stream) {
+  changeLength(stream) {
 
     // Change length according to in and out points given in preferences and the sampling rate for analysis
     return stream.slice(this.preferences.inPoint * this.preferences.analysisSampleRate, this.preferences.outPoint * this.preferences.analysisSampleRate)
 
   }
 
-  static corellationValue(streams) {
+  corellationValue(streams) {
 
     let length = streams.length
 
