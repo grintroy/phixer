@@ -42,4 +42,13 @@ function keyPressed() {
 }
 
 function button() {
+
+  document.getElementById("result").innerHTML = phixer.analysePhase(phixer.takes)
+
+  // const player2 = new Tone.Player(Phixer.convertToAudioBuffer(phixer.resample(phixer.takes[0]), phixer.takes[0].duration, phixer.preferences.analysisSampleRate), console.log("loaded")).toDestination()
+  // player2.start()
+
+
+  // let player2 = new Tone.Player(Phixer.convertToAudioBuffer(phixer.resample(phixer.takes[0]), phixer.takes[0].duration, phixer.takes[0].sampleRate), "New is loaded")
+
 }

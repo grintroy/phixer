@@ -16,7 +16,7 @@ class Phixer {
 	    "outPoint": 3, // in seconds
 	    "duration": 3, // in seconds
 	    "targetLCC": 1, // target linear corellation coefficient
-	    "analysisSampleRate": 100, // in samples per second
+	    "analysisSampleRate": 48000, // in samples per second
 	    "primaryTrack": 0, // index in the takes array
 	    "fadeTime": 0.02 // in seconds
 	  }
@@ -29,11 +29,7 @@ class Phixer {
 			this.duration = duration // in seconds
 			this.sampleRate = sampleRate
 
-			this.audioBuffer = context.createBuffer(1, duration * sampleRate, sampleRate)
-			for (var i = 0; i < buffer.length; i++) {
-				this.audioBuffer.getChannelData(0)[i] = buffer[i]
-			}
-
+			this.audioBuffer = Phixer.convertToAudioBuffer(buffer, duration, sampleRate)
 			this.player = new Tone.Player(this.audioBuffer, console.log(this.name + " is loaded.")).toDestination()
 		}
 	}
@@ -63,20 +59,35 @@ class Phixer {
 		}
 	}
 
-	analysePhase(streams) {
+	static convertToAudioBuffer(arrayBuffer, duration, sampleRate) {
 
-    // for (let stream of streams) {
-    //   stream = this.changeLength(stream)
-    // }
+		let audioBuffer = context.createBuffer(1, duration * sampleRate, sampleRate)
+		for (var i = 0; i < arrayBuffer.length; i++) {
+			audioBuffer.getChannelData(0)[i] = arrayBuffer[i]
+		}
+		return audioBuffer
+
+	}
+
+	analysePhase(takes) {
+
+		let streams = []
+
+    for (let take of takes) {
+      streams.push(this.changeLength(this.resample(take)))
+    }
+
+		return this.corellationValue(streams)
 
   }
 
   resample(take) {
 
-		const stream = take.buffer
+		const stream = take.arrayBuffer
+
 		let newStream = []
 
-		const resampleCoef = 1 / (take.sampleTime * this.preferences.analysisSampleRate)
+		const resampleCoef = 1 / (1 / take.sampleRate * this.preferences.analysisSampleRate)
 
 		for (let sampleCounter = 0; sampleCounter < stream.length / resampleCoef; sampleCounter++) {
 			newStream.push(stream[Math.floor(sampleCounter * resampleCoef)])
@@ -95,7 +106,7 @@ class Phixer {
 
   corellationValue(streams) {
 
-    let length = streams.length
+    let length = streams[0].length
 
     // Calculation of the sum of the products and the product of sums of squares following the original formula.
     let numerator = new Array(length).fill(1)
@@ -116,8 +127,6 @@ class Phixer {
       (previousValue, currentValue) => previousValue * currentValue,
       1 // initial value
     )
-
-    console.log(corSumOfProducts, corProductOfSums)
 
     return (corSumOfProducts / Math.sqrt(corProductOfSums))
   }
