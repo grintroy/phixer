@@ -1,10 +1,26 @@
-#upload {
-  width: 100%;
-  height: 15rem;
-  background-color: #ddd;
+:root {
+  --bs-primary-rgb: 255, 237, 78 !important;
 }
 
-#button {
-  width: 100%;
-  height: 5rem;
+hr {
+  border-top: 5px solid black !important;
+  opacity: 1 !important;
+}
+
+.text-muted {
+  color: #CCC !important;
+}
+
+#upload-icon {
+  width: 5rem;
+}
+
+#upload-window {
+  height: 20rem;
+}
+
+@media (min-width: 992px) {
+  #upload-window {
+    height: 30rem;
+  }
 }

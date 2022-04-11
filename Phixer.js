@@ -1,14 +1,20 @@
-const context = new Tone.Context()
-
 class Phixer {
 
 	constructor() {
-		this.input = document.getElementById("upload")
+
+		this.input = document.getElementById("phixer-upload-button")
+
+		if (!this.input) {
+			console.warn(`Phixer needs an input with id "phixer-upload-button"`)
+			return
+		}
+
 		this.input.onchange = () => {
 			let files = this.input.files
 			Tone.start()
 			this.readFiles(files)
 		}
+
 
 		this.takes = []
 		this.preferences = {
@@ -20,6 +26,8 @@ class Phixer {
 	    "primaryTrack": 0, // index in the takes array
 	    "fadeTime": 0.02 // in seconds
 	  }
+
+		this.context = new Tone.Context()
 	}
 
 	static Take = class {
@@ -29,7 +37,7 @@ class Phixer {
 			this.duration = duration // in seconds
 			this.sampleRate = sampleRate
 
-			this.audioBuffer = Phixer.convertToAudioBuffer(buffer, duration, sampleRate)
+			this.audioBuffer = this.convertToAudioBuffer(buffer, duration, sampleRate)
 			this.player = new Tone.Player(this.audioBuffer, console.log(this.name + " is loaded.")).toDestination()
 		}
 	}
@@ -45,7 +53,7 @@ class Phixer {
 			fileReader.readAsArrayBuffer(file)
 			fileReader.onload = () => {
 				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size/1024/1024*100))/100} MB)`)
-				context.decodeAudioData(fileReader.result).then((buffer) => {
+				this.context.decodeAudioData(fileReader.result).then((buffer) => {
 					for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
 
 						// The input file can be multichannel but it needs to include only one "." symbol
@@ -59,9 +67,9 @@ class Phixer {
 		}
 	}
 
-	static convertToAudioBuffer(arrayBuffer, duration, sampleRate) {
+	convertToAudioBuffer(arrayBuffer, duration, sampleRate) {
 
-		let audioBuffer = context.createBuffer(1, duration * sampleRate, sampleRate)
+		let audioBuffer = this.context.createBuffer(1, duration * sampleRate, sampleRate)
 		for (var i = 0; i < arrayBuffer.length; i++) {
 			audioBuffer.getChannelData(0)[i] = arrayBuffer[i]
 		}
