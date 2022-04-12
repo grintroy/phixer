@@ -53,14 +53,20 @@ function button() {
 
 let playing = false
 
+const playButton = document.getElementById("play-button-img")
+const stopButton = document.getElementById("stop-button")
+const playerButtonWrapper = document.getElementById("player-button")
+
 document.getElementById("player-button").onclick = () => {
   if (!playing) {
-    document.getElementById("play-button-img").style.display = "none"
-    document.getElementById("stop-button").style.display = "block"
+    playButton.style.display = "none"
+    playerButtonWrapper.style.backgroundColor = "black"
+    stopButton.style.display = "block"
     playing = true
   } else {
-    document.getElementById("play-button-img").style.display = "block"
-    document.getElementById("stop-button").style.display = "none"
+    playButton.style.display = "block"
+    playerButtonWrapper.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
+    stopButton.style.display = "none"
     playing = false
   }
 }

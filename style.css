@@ -84,7 +84,8 @@
 #stop-button {
   width: 1.8rem;
   height: 1.8rem;
-  background-color: black;
+  margin: auto;
+  background-color: rgb(var(--bs-primary-rgb));
   border-radius: 0.2rem;
   display: none;
 }
