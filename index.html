@@ -104,10 +104,12 @@
                       <div class="d-flex flex-fill justify-content-center align-items-center bg-light border rounded-3" id="player">
                       </div>
                       <div class="d-flex justify-content-between fs-6 text-muted text-decoration-underline mt-3">
-                        <div class="d-flex flex-column align-items-center time-markers col-sm-2 col-lg-1">
+
+                        <div class="d-flex flex-column align-items-center time-markers-l col-sm-2 col-lg-1">
                             <label for="in-point" class="form-label in-out-labels">In point</label>
-                            <input type="number" placeholder="00:00" class="form-control bg-light border rounded-3 text-muted" id="in-point">
+                            <input type="number" placeholder="00:00" class="form-control bg-light border rounded-3 text-muted in-out-points" id="in-point">
                         </div>
+
                         <div class="dropdown mx-2">
                           <button class="d-flex btn btn-secondary dropdown-toggle align-items-center border rounded-3 text-muted" data-bs-offset="0, 10" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="take_duration">
                             15 seconds
@@ -119,10 +121,12 @@
                             <li><a class="dropdown-item" href="#">60 seconds</a></li>
                           </ul>
                         </div>
-                        <div class="d-flex flex-column align-items-center time-markers col-sm-2 col-lg-1">
+
+                        <div class="d-flex flex-column align-items-center time-markers-r col-sm-2 col-lg-1">
                           <label for="out-point" class="form-label in-out-labels">Out point</label>
-                          <input type="number" placeholder="00:15" class="text-muted form-control bg-light border rounded-3" id="out-point">
+                          <input type="number" placeholder="00:15" class="text-muted form-control bg-light border rounded-3 in-out-points" id="out-point">
                         </div>
+                        
                       </div>
                     </div>
                   </div>

@@ -39,7 +39,7 @@
 }
 
 .btn-secondary:focus {
-  box-shadow: none;
+  box-shadow: 0 0 0 .25rem rgba(239, 240, 241, 0.5);
   background-color: rgba(239, 240, 241, 1);
 }
 
@@ -49,6 +49,19 @@
 
 .text-muted {
   color: #ccc !important;
+}
+
+.in-out-points:hover {
+  background-color: rgba(239, 240, 241, 1) !important;
+}
+
+.in-out-points:focus {
+  box-shadow: 0 0 0 .25rem rgba(239, 240, 241, 0.5) !important;
+  background-color: rgba(239, 240, 241, 1) !important;
+}
+
+.in-out-points:active {
+  background-color: rgba(239, 240, 241, 1) !important;
 }
 
 #upload-icon {
@@ -122,16 +135,28 @@
   color: black;
 }
 
-.time-markers::before {
+.time-markers-l::before {
   content: "";
   display: block;
   position: absolute;
   width: 0;
   height: 0;
-  border-left: 0.5rem solid transparent;
-  border-right: 0.5rem solid transparent;
-  border-bottom: 0.5rem solid rgba(222, 226, 230);
-  transform: translate(0, -0.5rem);
+  border-left: 0.65rem solid transparent;
+  border-top: 0.65rem solid transparent;
+  border-right: 0.65rem solid rgba(222, 226, 230);
+  transform: translate(-0.325rem, -0.625rem);
+}
+
+.time-markers-r::before {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-right: 0.65rem solid transparent;
+  border-top: 0.65rem solid transparent;
+  border-left: 0.65rem solid rgba(222, 226, 230);
+  transform: translate(0.325rem, -0.625rem);
 }
 
 /* next two from https://www.w3schools.com/howto/howto_css_hide_arrow_number.asp */
