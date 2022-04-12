@@ -21,9 +21,15 @@
   }
 }
 
+// var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+// var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+//   return new bootstrap.Dropdown(dropdownToggleEl)
+// })
+
 const phixer = new Phixer()
 
 function setup() {
+
 }
 
 function draw() {
@@ -43,12 +49,18 @@ function keyPressed() {
 
 function button() {
 
-  document.getElementById("result").innerHTML = phixer.analysePhase(phixer.takes)
+}
 
-  // const player2 = new Tone.Player(Phixer.convertToAudioBuffer(phixer.resample(phixer.takes[0]), phixer.takes[0].duration, phixer.preferences.analysisSampleRate), console.log("loaded")).toDestination()
-  // player2.start()
+let playing = false
 
-
-  // let player2 = new Tone.Player(Phixer.convertToAudioBuffer(phixer.resample(phixer.takes[0]), phixer.takes[0].duration, phixer.takes[0].sampleRate), "New is loaded")
-
+document.getElementById("player-button").onclick = () => {
+  if (!playing) {
+    document.getElementById("play-button-img").style.display = "none"
+    document.getElementById("stop-button").style.display = "block"
+    playing = true
+  } else {
+    document.getElementById("play-button-img").style.display = "block"
+    document.getElementById("stop-button").style.display = "none"
+    playing = false
+  }
 }
