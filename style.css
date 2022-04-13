@@ -182,4 +182,5 @@ input[type="number"]::placeholder {
 
 #logo-img {
   height: 4rem;
+  padding-bottom: 0.26rem;
 }
