@@ -184,3 +184,95 @@ input[type="number"]::placeholder {
   height: 4rem;
   padding-bottom: 0.26rem;
 }
+
+/* https://trac.webkit.org/browser/trunk/Source/WebCore/css/html.css */
+/* https://css-tricks.com/styling-cross-browser-compatible-range-inputs-css/ */
+/* https://css-tricks.com/value-bubbles-for-range-inputs/ */
+
+input[type=range]::-webkit-slider-runnable-track {
+  height: 1rem;
+  border-radius: 0;
+  background-color: rgb(248, 249, 250);
+  border-top: 1px rgb(222, 226, 230) solid;
+  border-bottom: 1px rgb(222, 226, 230) solid;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  border-radius: 0.3rem;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  margin-top: -0.5rem;
+  background-color: rgb(248, 249, 250);
+  border: 1px rgb(222, 226, 230) solid;
+  box-shadow: none;
+}
+
+input[type="range"]::-webkit-slider-thumb:focus {
+  outline: none !important;
+}
+
+.range-wrap {
+  position: relative;
+  margin-top: 1rem;
+  padding-bottom: 3.5rem;
+}
+
+.range-wrap::before {
+  content: "";
+  width: 3rem;
+  height: 1em;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  position: absolute;
+}
+
+.range-wrap::after {
+  content: "";
+  width: 3rem;
+  height: 1em;
+  background: linear-gradient(-90deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  position: absolute;
+  right: 0;
+}
+
+.range-extension {
+  flex-basis: 3rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: 1rem;
+  border-radius: 0;
+  background-color: rgb(248, 249, 250);
+  border-top: 1px rgb(222, 226, 230) solid;
+  border-bottom: 1px rgb(222, 226, 230) solid;
+  margin-top: 0.25rem;
+}
+
+.range-wrap-center {
+  flex-basis: 100%;
+}
+
+.bubble {
+  color: #ccc;
+  text-align: center;
+  margin-top: 3rem;
+  border-radius: 0.3rem;
+  padding: 0.4rem 0.65rem;
+  background-color: rgb(248, 249, 250);
+  border: 1px rgb(222, 226, 230) solid;
+  position: absolute;
+  box-sizing: content-box;
+}
+
+.bubble::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: calc(50% - 0.5rem);
+  width: 0;
+  height: 0;
+  border-right: 0.5rem solid transparent;
+  border-left: 0.5rem solid transparent;
+  border-bottom: 0.5rem solid rgba(222, 226, 230);
+  transform: translate(0, -0.9rem);
+}

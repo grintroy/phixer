@@ -76,6 +76,7 @@
         <div class="container" id="step-2">
           <h1 class="fw-bold">Step 2</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
+
           <section class="py-4">
             <div class="container-fluid d-flex px-0 fs-5">
               <div class="text-muted fw-bold">
@@ -126,7 +127,7 @@
                           <label for="out-point" class="form-label in-out-labels">Out point</label>
                           <input type="number" placeholder="00:15" class="text-muted form-control bg-light border rounded-3 in-out-points" id="out-point">
                         </div>
-                        
+
                       </div>
                     </div>
                   </div>
@@ -134,6 +135,45 @@
               </div>
             </div>
           </section>
+
+          <section class="pb-4">
+            <div class="container-fluid d-flex px-0 fs-5">
+              <div class="text-muted fw-bold">
+                <p>2.</p>
+              </div>
+              <div class="container-fluid pe-0">
+                <label for="switch-2-2-range" class="form-label"><a id="switch-2-2-1">Select your preference for spatial image</a> or <a href="#" class="text-muted" id="switch-2-2-2">use linear corellation coefficient</a>.</label>
+                <div class="range-wrap d-flex">
+                  <div class="range-extension"></div>
+                  <div class="range-wrap-center">
+                    <input type="range" class="form-range" name="range-2-2" id="switch-2-2-range" min="0" max="100" value="50">
+                    <output class="bubble fs-6"></output>
+                  </div>
+                  <div class="range-extension"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="pb-4">
+            <div class="container-fluid d-flex px-0 fs-5">
+              <div class="text-muted fw-bold">
+                <p>3.</p>
+              </div>
+              <div class="container-fluid pe-0">
+                <label for="switch-2-3-range" class="form-label"><a id="switch-2-3-1">Choose the precision</a> or <a href="#" class="text-muted" id="switch-2-3-2">enter the sampling rate for analysis</a>.</label>
+                <div class="range-wrap d-flex">
+                  <div class="range-extension"></div>
+                  <div class="range-wrap-center">
+                    <input type="range" class="form-range" name="range-2-3" id="switch-2-3-range" min="0" max="100" value="50">
+                    <output class="bubble fs-6"></output>
+                  </div>
+                  <div class="range-extension"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <hr class="border mt-2 mb-0">
           <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3" id="button-next">Next →</button>
         </div>
