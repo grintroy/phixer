@@ -179,3 +179,7 @@ input::-webkit-inner-spin-button {
 input[type="number"]::placeholder {
   color: #ccc;
 }
+
+#logo-img {
+  height: 4rem;
+}
