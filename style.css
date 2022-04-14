@@ -51,17 +51,8 @@
   color: #ccc !important;
 }
 
-.in-out-points:hover {
-  background-color: rgba(239, 240, 241, 1) !important;
-}
-
-.in-out-points:focus {
-  box-shadow: 0 0 0 .25rem rgba(239, 240, 241, 0.5) !important;
-  background-color: rgba(239, 240, 241, 1) !important;
-}
-
-.in-out-points:active {
-  background-color: rgba(239, 240, 241, 1) !important;
+.in-out-points {
+  text-align: center;
 }
 
 #upload-icon {
@@ -82,10 +73,6 @@
   #upload-window {
     height: 30rem;
   }
-}
-
-#step-1 {
-  display: none;
 }
 
 #player-button {
@@ -162,7 +149,6 @@
 /* next two from https://www.w3schools.com/howto/howto_css_hide_arrow_number.asp */
 
 input[type="number"] {
-  text-align: center;
   -moz-appearance: textfield;
 }
 
@@ -276,3 +262,34 @@ input[type="range"]::-webkit-slider-thumb:focus {
   border-bottom: 0.5rem solid rgba(222, 226, 230);
   transform: translate(0, -0.9rem);
 }
+
+.form-control:hover {
+  background-color: rgba(239, 240, 241, 1) !important;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 .25rem rgba(239, 240, 241, 0.5) !important;
+  background-color: rgba(239, 240, 241, 1) !important;
+}
+
+.form-control:active {
+  background-color: rgba(239, 240, 241, 1) !important;
+}
+
+.number-big {
+  width: 9rem;
+}
+
+#upload-files {
+  display: none;
+}
+
+#upload-window {
+  transition: border-style 0.5s, border-width 0.5s;
+}
+
+.btn-primary {
+  box-shadow: 0 0.3rem 1rem 0.15rem rgba(var(--bs-primary-rgb), 0.3);
+}
+
+/* add animation to change of steps and button shadow maybe */

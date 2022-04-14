@@ -27,7 +27,7 @@
     <header>
       <nav class="navbar navbar-expand-lg navbar-light bg-primary">
         <div class="container">
-          <a class="navbar-brand fs-1 fw-bold" href="#"><img src="logo.svg" alt="" id="logo-img"></a>
+          <a class="navbar-brand fs-1 fw-bold" href="/"><img src="logo.svg" alt="" id="logo-img"></a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -47,10 +47,11 @@
         </div>
       </nav>
     </header>
-    <div class="container-fluid my-4 p-0">
+
+    <div class="container my-4 p-0">
       <main>
 
-        <div class="container" id="step-1">
+        <div class="container step-container" id="step-1">
           <h1 class="fw-bold">Step 1</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
           <section class="py-4">
@@ -60,20 +61,20 @@
               </div>
               <div class="container-fluid pe-0">
                 <p>Select your files. <a href="#" class="text-muted">What files?</a></p>
-                <div class="d-flex justify-content-center align-items-center bg-light border rounded-3" id="upload-window">
-                  <div>
+                <div class="d-flex justify-content-center align-items-center bg-light border rounded-3" id="upload-window" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                  <div id="upload-files-div">
                     <img src="upload_icon.svg" class="mx-auto d-block pb-3" id="upload-icon" alt="">
-                    <p class="text-muted m-0"><a href="#" class="text-muted">Select</a> or drag-and-drop</p>
+                    <input type="file" multiple class="text-muted m-0 form-control" id="upload-files"><a href="#/" class="text-muted">Select</a> or drag-and-drop
                   </div>
                 </div>
               </div>
             </div>
           </section>
           <hr class="border mt-2 mb-0">
-          <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3" id="button-next">Next →</button>
+          <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step1">Next →</button>
         </div>
 
-        <div class="container" id="step-2">
+        <div class="container step-container" id="step-2" style="display: none">
           <h1 class="fw-bold">Step 2</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
 
@@ -106,7 +107,7 @@
                       </div>
                       <div class="d-flex justify-content-between fs-6 text-muted text-decoration-underline mt-3">
 
-                        <div class="d-flex flex-column align-items-center time-markers-l col-sm-2 col-lg-1">
+                        <div class="d-flex flex-column align-items-center time-markers-l col-3 col-md-2 col-lg-1">
                             <label for="in-point" class="form-label in-out-labels">In point</label>
                             <input type="number" placeholder="00:00" class="form-control bg-light border rounded-3 text-muted in-out-points" id="in-point">
                         </div>
@@ -123,7 +124,7 @@
                           </ul>
                         </div>
 
-                        <div class="d-flex flex-column align-items-center time-markers-r col-sm-2 col-lg-1">
+                        <div class="d-flex flex-column align-items-center time-markers-r col-3 col-md-2 col-lg-1">
                           <label for="out-point" class="form-label in-out-labels">Out point</label>
                           <input type="number" placeholder="00:15" class="text-muted form-control bg-light border rounded-3 in-out-points" id="out-point">
                         </div>
@@ -141,15 +142,24 @@
               <div class="text-muted fw-bold">
                 <p>2.</p>
               </div>
-              <div class="container-fluid pe-0">
-                <label for="switch-2-2-range" class="form-label"><a id="switch-2-2-1">Select your preference for spatial image</a> or <a href="#" class="text-muted" id="switch-2-2-2">use linear corellation coefficient</a>.</label>
-                <div class="range-wrap d-flex">
-                  <div class="range-extension"></div>
-                  <div class="range-wrap-center">
-                    <input type="range" class="form-range" name="range-2-2" id="switch-2-2-range" min="0" max="100" value="50">
-                    <output class="bubble fs-6"></output>
+              <div class="container-fluid m-0 p-0 switch-range-number">
+                <div class="container-fluid pe-0 switch-range" id="block-2-2-1">
+                  <label for="2-2-1-range" class="form-label"><a id="switch-2-2-1">Select your preference for spatial image</a> or <a href="#/" class="text-muted" id="switch-2-2-2">use linear corellation coefficient</a>.</label>
+                  <div class="range-wrap d-flex">
+                    <div class="range-extension"></div>
+                    <div class="range-wrap-center">
+                      <input type="range" class="form-range" name="range-2-2" id="2-2-1-range" min="0" max="100" value="50">
+                      <output class="bubble fs-6"></output>
+                    </div>
+                    <div class="range-extension"></div>
                   </div>
-                  <div class="range-extension"></div>
+                </div>
+                <div class="container-fluid pe-0 switch-number" id="block-2-2-2" style="display: none;">
+                  <label for="2-2-2-number" class="form-label">Select <a id="switch-2-2-1" href="#/" class="text-muted">your preference for spatial image</a> or <a id="switch-2-2-2">use linear corellation coefficient</a>.</label>
+                  <div class="d-flex flex-row mt-2">
+                    <input type="number" name="number-2-2" id="2-2-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="0.75">
+                    <p class="text-muted fs-6 align-self-center m-3">out of 1</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -160,22 +170,31 @@
               <div class="text-muted fw-bold">
                 <p>3.</p>
               </div>
-              <div class="container-fluid pe-0">
-                <label for="switch-2-3-range" class="form-label"><a id="switch-2-3-1">Choose the precision</a> or <a href="#" class="text-muted" id="switch-2-3-2">enter the sampling rate for analysis</a>.</label>
-                <div class="range-wrap d-flex">
-                  <div class="range-extension"></div>
-                  <div class="range-wrap-center">
-                    <input type="range" class="form-range" name="range-2-3" id="switch-2-3-range" min="0" max="100" value="50">
-                    <output class="bubble fs-6"></output>
+              <div class="container-fluid m-0 p-0 switch-range-number">
+                <div class="container-fluid pe-0 switch-range">
+                  <label for="switch-2-3-range" class="form-label"><a id="switch-2-3-1">Choose the precision</a> or <a href="#/" class="text-muted" id="switch-2-3-2">enter the sampling rate for analysis</a>.</label>
+                  <div class="range-wrap d-flex">
+                    <div class="range-extension"></div>
+                    <div class="range-wrap-center">
+                      <input type="range" class="form-range" name="range-2-3" id="switch-2-3-range" min="0" max="100" value="50">
+                      <output class="bubble fs-6"></output>
+                    </div>
+                    <div class="range-extension"></div>
                   </div>
-                  <div class="range-extension"></div>
+                </div>
+                <div class="container-fluid pe-0 switch-number" id="block-2-2-2" style="display: none;">
+                  <label for="2-3-2-number" class="form-label">Choose <a id="switch-2-3-1" href="#/" class="text-muted">the precision</a> or <a id="switch-2-3-2">enter the sampling rate for analysis</a>.</label>
+                  <div class="d-flex flex-row mt-2">
+                    <input type="number" name="number-2-2" id="2-3-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="11025">
+                    <p class="text-muted fs-6 align-self-center m-3">samples per second</p>
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
           <hr class="border mt-2 mb-0">
-          <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3" id="button-next">Next →</button>
+          <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step2">Next →</button>
         </div>
 
     </main>

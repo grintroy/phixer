@@ -1,11 +1,13 @@
 class Phixer {
 
-	constructor() {
+	constructor(input) {
 
-		this.input = document.getElementById("phixer-upload-button")
+		this.input = input
 
-		if (!this.input) {
-			console.warn(`Phixer needs an input with id "phixer-upload-button"`)
+		console.log("Phixer is initialized. Files: " + input.length);
+
+		if (!input) {
+			console.warn(`Phixer needs an input when initializing`)
 			return
 		}
 
