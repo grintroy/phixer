@@ -2,6 +2,9 @@ class Phixer {
 
 	constructor(input) {
 
+		this.fileReadStatus = false
+		this.playerLoadedStatus = false
+
 		this.input = input
 
 		console.log("Phixer is initialized. Files: " + input.length);
@@ -11,12 +14,7 @@ class Phixer {
 			return
 		}
 
-		this.input.onchange = () => {
-			let files = this.input.files
-			Tone.start()
-			this.readFiles(files)
-		}
-
+		Tone.start()
 
 		this.takes = []
 		this.preferences = {
@@ -30,21 +28,57 @@ class Phixer {
 	  }
 
 		this.context = new Tone.Context()
+		this.readFiles(this.input)
+	}
+
+	initPlayer() {
+		this.player = new Phixer.Player(this)
 	}
 
 	static Take = class {
-		constructor(name, buffer, duration, sampleRate) {
+		constructor(parent, name, buffer, duration, sampleRate) {
 			this.name = name
 			this.arrayBuffer = buffer
 			this.duration = duration // in seconds
 			this.sampleRate = sampleRate
+			this.parent = parent
 
-			this.audioBuffer = this.convertToAudioBuffer(buffer, duration, sampleRate)
-			this.player = new Tone.Player(this.audioBuffer, console.log(this.name + " is loaded.")).toDestination()
+			this.audioBuffer = parent.convertToAudioBuffer(buffer, duration, sampleRate)
+		}
+
+		initPlayer() {
+			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
+		}
+
+		onload() {
+			console.log(this.name + " is loaded.")
+			this.parent.initPlayer()
+		}
+	}
+
+	static Player = class {
+		constructor(parent) {
+
+			this.parent = parent
+			this.durationMatrix = [
+				15, 30, 45, 60
+			]
+
+			this.button = document.getElementById("player-button")
+			this.inPoint = document.getElementById("in-point").value
+			this.outPoint = document.getElementById("out-point").value
+
+			this.duration = this.durationMatrix[0]
+
+			this.takeNum = 1
+
+			this.tonePlayer = parent.takes[0].player
 		}
 	}
 
 	readFiles(files) {
+
+		let newTake
 
 		const nameNumbersSF = 2 // significant figures for the take name index
 
@@ -56,13 +90,22 @@ class Phixer {
 			fileReader.onload = () => {
 				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size/1024/1024*100))/100} MB)`)
 				this.context.decodeAudioData(fileReader.result).then((buffer) => {
+
+					this.fileReadStatus = new Promise(resolve => {
+						resolve
+					})
+
 					for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
 
 						// The input file can be multichannel but it needs to include only one "." symbol
 
 						const filename = file.name.split(".")[0] + "_" + (channel + 1).toString().padStart(nameNumbersSF, "0")
 
-						this.takes.push(new Phixer.Take(filename, buffer.getChannelData(channel), buffer.duration, buffer.sampleRate))
+						newTake = new Phixer.Take(this, filename, buffer.getChannelData(channel), buffer.duration, buffer.sampleRate)
+
+						this.takes.push(newTake)
+
+						newTake.initPlayer()
 					}
 				})
 			}

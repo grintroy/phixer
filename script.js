@@ -24,6 +24,7 @@
 let inputFiles = []
 
 let phixer
+let player
 
 function setup() {
 
@@ -55,11 +56,18 @@ document.getElementById("player-button").onclick = () => {
     playButton.style.display = "none"
     playerButtonWrapper.style.backgroundColor = "black"
     stopButton.style.display = "block"
+
+    phixer.player.tonePlayer.start()
+
     playing = true
+
   } else {
     playButton.style.display = "block"
     playerButtonWrapper.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
     stopButton.style.display = "none"
+
+    phixer.player.tonePlayer.stop()
+
     playing = false
   }
 }
@@ -203,20 +211,23 @@ function dragLeaveHandler(event) {
 
 const buttonStep1 = document.querySelector("#btn-step1")
 buttonStep1.addEventListener("click", () => {
+
   phixer = new Phixer(inputFiles)
 
-  allRanges.forEach(wrap => {
-    const range = wrap.querySelector(".form-range")
-    const bubble = wrap.querySelector(".bubble")
-    setBubble(range, bubble)
-  
-    range.addEventListener("input", () => {
+  setTimeout(() => {
+    allRanges.forEach(wrap => {
+      const range = wrap.querySelector(".form-range")
+      const bubble = wrap.querySelector(".bubble")
+      setBubble(range, bubble)
+    
       range.addEventListener("input", () => {
+        range.addEventListener("input", () => {
+          setBubble(range, bubble)
+        })
         setBubble(range, bubble)
       })
       setBubble(range, bubble)
+    
     })
-    setBubble(range, bubble)
-  
-  })
+  }, 350);
 })
