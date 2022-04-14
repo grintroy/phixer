@@ -123,10 +123,18 @@ const allBtnNext = document.querySelectorAll(".button-next")
 
 allBtnNext.forEach(button => {
   const id = Number(button.id.slice(-1))
+  const currentStep = document.querySelector(`#step-${id}`)
+  const nextStep = document.querySelector(`#step-${id + 1}`)
   
   button.addEventListener("click", () => {
-    document.querySelector(`#step-${id}`).style.display = "none"
-    document.querySelector(`#step-${id + 1}`).style.display = "block"
+    currentStep.style.opacity = 0
+    setTimeout(() => {
+      currentStep.style.display = "none"
+      nextStep.style.display = "block"
+      setTimeout(() => {
+        nextStep.style.opacity = 1
+      }, 1);
+    }, 350)
   })
 })
 
@@ -196,6 +204,7 @@ function dragLeaveHandler(event) {
 const buttonStep1 = document.querySelector("#btn-step1")
 buttonStep1.addEventListener("click", () => {
   phixer = new Phixer(inputFiles)
+
   allRanges.forEach(wrap => {
     const range = wrap.querySelector(".form-range")
     const bubble = wrap.querySelector(".bubble")
