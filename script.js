@@ -133,7 +133,7 @@ allBtnNext.forEach(button => {
   const id = Number(button.id.slice(-1))
   const currentStep = document.querySelector(`#step-${id}`)
   const nextStep = document.querySelector(`#step-${id + 1}`)
-  
+
   button.addEventListener("click", () => {
     currentStep.style.opacity = 0
     setTimeout(() => {
@@ -191,6 +191,8 @@ function dropHandler(event) {
   }
 
   document.querySelector("#upload-window").style.borderWidth = null
+
+  const filesCounter = document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
 }
 
 function dragOverHandler(event) {
@@ -219,7 +221,7 @@ buttonStep1.addEventListener("click", () => {
       const range = wrap.querySelector(".form-range")
       const bubble = wrap.querySelector(".bubble")
       setBubble(range, bubble)
-    
+
       range.addEventListener("input", () => {
         range.addEventListener("input", () => {
           setBubble(range, bubble)
@@ -227,7 +229,7 @@ buttonStep1.addEventListener("click", () => {
         setBubble(range, bubble)
       })
       setBubble(range, bubble)
-    
+
     })
   }, 350);
 })

@@ -18,7 +18,7 @@
     <meta name="application-name" content="Phixer">
     <meta name="msapplication-TileColor" content="#ffed4e">
     <meta name="msapplication-config" content="/favicons/browserconfig.xml">
-    <meta name="theme-color" content="#000000"> 
+    <meta name="theme-color" content="#000000">
 
     <title>Phixer</title>
 
@@ -80,8 +80,11 @@
                 <div class="d-flex justify-content-center align-items-center bg-light border rounded-3" id="upload-window" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
                   <div id="upload-files-div">
                     <img src="upload_icon.svg" class="mx-auto d-block pb-3" id="upload-icon" alt="">
-                    <input type="file" multiple class="text-muted m-0 form-control" id="upload-files"><a href="#/" class="text-muted">Select</a> or drag-and-drop
+                    <input type="file" multiple class="text-muted m-0 form-control" id="upload-files"><p class="text-muted"><a href="#/" class="text-muted">Select</a> or drag-and-drop<p>
                   </div>
+                </div>
+                <div class="container-fluid px-0 mt-3 text-muted" id="uploadedFilesCountDiv">
+                  <p class="p-0 m-0">Files uploaded: <span class="fw-bold border py-1 px-2 bg-light rounded-3" id="uploadedFilesCount">0</span></p>
                 </div>
               </div>
             </div>

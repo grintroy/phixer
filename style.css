@@ -295,5 +295,3 @@ input[type="range"]::-webkit-slider-thumb:focus {
 .step-container {
   transition: opacity 0.35s;
 }
-
-/* add animation to change of steps and button shadow maybe */
