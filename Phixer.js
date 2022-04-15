@@ -2,12 +2,9 @@ class Phixer {
 
 	constructor(input) {
 
-		this.fileReadStatus = false
-		this.playerLoadedStatus = false
-
 		this.input = input
 
-		console.log("Phixer is initialized. Files: " + input.length);
+		console.log("Phixer is initialized. Files: " + input.length)
 
 		if (!input) {
 			console.warn(`Phixer needs an input when initializing`)
@@ -72,7 +69,11 @@ class Phixer {
 
 			this.takeNum = 1
 
-			this.tonePlayer = parent.takes[0].player
+			this.connect(parent.takes[0])
+		}
+
+		connect(take) {
+			this.connectedTonePlayer = take.player
 		}
 	}
 
@@ -90,10 +91,6 @@ class Phixer {
 			fileReader.onload = () => {
 				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size/1024/1024*100))/100} MB)`)
 				this.context.decodeAudioData(fileReader.result).then((buffer) => {
-
-					this.fileReadStatus = new Promise(resolve => {
-						resolve
-					})
 
 					for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
 

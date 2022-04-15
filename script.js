@@ -25,6 +25,7 @@ let inputFiles = []
 
 let phixer
 let player
+hideElements()
 
 function setup() {
 
@@ -45,30 +46,60 @@ function keyPressed() {
   }
 }
 
-let playing = false
+class PlayerButton {
 
-const playButton = document.getElementById("play-button-img")
-const stopButton = document.getElementById("stop-button")
-const playerButtonWrapper = document.getElementById("player-button")
+  constructor(element) {
+    this.player = phixer.player
+    this.buttonElement = element
+    this.playButton = element.querySelector("[phixer-player-button='play']")
+    this.stopButton = element.querySelector("[phixer-player-button='stop']")
 
-document.getElementById("player-button").onclick = () => {
-  if (!playing) {
-    playButton.style.display = "none"
-    playerButtonWrapper.style.backgroundColor = "black"
-    stopButton.style.display = "block"
+    this.initConnection()
+  }
 
-    phixer.player.tonePlayer.start()
+  initConnection() {
+    this.player.connectedTonePlayer.onstop = () => {
+      playerButton.stop()
+    }
+  }
 
-    playing = true
+  updateConnection() {
+    this.player.connectedTonePlayer.onstop = null
+    this.player = phixer.player
 
-  } else {
-    playButton.style.display = "block"
-    playerButtonWrapper.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
-    stopButton.style.display = "none"
+    this.initConnection()
+  }
 
-    phixer.player.tonePlayer.stop()
+  start() {
+    this.playButton.hidden = true
+    this.buttonElement.style.backgroundColor = "black"
+    this.stopButton.hidden = false
 
-    playing = false
+    this.player.connectedTonePlayer.start()
+  }
+
+  stop() {
+    this.playButton.hidden = false
+    this.buttonElement.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
+    this.stopButton.hidden = true
+  }
+}
+
+const playerButtonElement = document.getElementById("player-button")
+
+let playerButton
+
+playerButtonElement.onclick = () => {
+
+  if (!playerButton) playerButton = new PlayerButton(playerButtonElement)
+
+  const state = phixer.player.connectedTonePlayer.state
+
+  if (state === "stopped") {
+    playerButton.start()
+
+  } else if (state === "started") {
+    playerButton.player.connectedTonePlayer.stop()
   }
 }
 
@@ -90,44 +121,29 @@ const rangesTextMatrix = {
 }
 
 const allRanges = document.querySelectorAll(".range-wrap")
-
-function setBubble(range, bubble) {
-
-  const halfWidth = bubble.getBoundingClientRect().width / 2 // in px
-
-  let val = range.value
-
-  for (const levels of Object.keys(rangesTextMatrix[range.name])) {
-    if (Number(val) >= Number(levels)) {
-      bubble.innerHTML = rangesTextMatrix[range.name][levels]
-    }
-  }
-
-  const min = range.min
-  const max = range.max
-
-
-  bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${(val / 50 - 1) * 1}rem - ${halfWidth}px)`
-}
-
 const allRNSwitches = document.querySelectorAll(".switch-range-number")
+const allBtnNext = document.querySelectorAll(".button-next")
+
+const uploadFilesDiv = document.querySelector("#upload-files-div")
+const uploadFilesInput = uploadFilesDiv.querySelector("#upload-files-input")
+const uploadFilesLink = uploadFilesDiv.querySelector("a")
+
+const buttonStep1 = document.querySelector("#btn-step1")
 
 allRNSwitches.forEach(block => {
   const range = block.querySelector(".switch-range")
   const number = block.querySelector(".switch-number")
 
   range.querySelector(".text-muted").addEventListener("click", () => {
-    range.style.display = "none"
-    number.style.display = "block"
+    range.hidden = true
+    number.hidden = false
   })
 
   number.querySelector(".text-muted").addEventListener("click", () => {
-    number.style.display = "none"
-    range.style.display = "block"
+    number.hidden = true
+    range.hidden = false
   })
 })
-
-const allBtnNext = document.querySelectorAll(".button-next")
 
 allBtnNext.forEach(button => {
   const id = Number(button.id.slice(-1))
@@ -137,18 +153,14 @@ allBtnNext.forEach(button => {
   button.addEventListener("click", () => {
     currentStep.style.opacity = 0
     setTimeout(() => {
-      currentStep.style.display = "none"
-      nextStep.style.display = "block"
+      currentStep.hidden = true
+      nextStep.hidden = false
       setTimeout(() => {
         nextStep.style.opacity = 1
       }, 1);
     }, 350)
   })
 })
-
-const uploadFilesDiv = document.querySelector("#upload-files-div")
-const uploadFilesInput = uploadFilesDiv.querySelector("#upload-files")
-const uploadFilesLink = uploadFilesDiv.querySelector("a")
 
 // https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
 // https://stackoverflow.com/questions/11406605/how-to-make-a-link-act-as-a-file-input
@@ -211,13 +223,14 @@ function dragLeaveHandler(event) {
   event.preventDefault();
 }
 
-const buttonStep1 = document.querySelector("#btn-step1")
 buttonStep1.addEventListener("click", () => {
 
   phixer = new Phixer(inputFiles)
 
   setTimeout(() => {
+
     allRanges.forEach(wrap => {
+
       const range = wrap.querySelector(".form-range")
       const bubble = wrap.querySelector(".bubble")
       setBubble(range, bubble)
@@ -231,5 +244,72 @@ buttonStep1.addEventListener("click", () => {
       setBubble(range, bubble)
 
     })
-  }, 350);
+
+    {
+      console.log(`Current connection (default): ${phixer.takes[0].name}.`)
+
+      // Takes dropdown menu initialization
+
+      const takesDropdown = document.querySelector("#takes-dropdown")
+
+      if (phixer.takes) takesDropdown.innerHTML = ""
+
+      phixer.takes.forEach((take) => {
+        takesDropdown.innerHTML += `<li><a class="dropdown-item" href="#">${take.name}</a></li>`
+      })
+
+      takesDropdown.querySelectorAll("li a")[0].classList.add("active")
+
+      takesDropdown.querySelectorAll("li a").forEach((option, i) => {
+
+        option.addEventListener("click", () => {
+
+          phixer.player.connectedTonePlayer.stop()
+
+          phixer.player.connect(phixer.takes[i])
+
+          console.log(`Current connection: ${phixer.takes[i].name}.`)
+
+          try {
+            playerButton.updateConnection()
+          } catch { }
+
+          takesDropdown.querySelectorAll("li a").forEach((item) => {
+            item.classList.remove("active")
+          })
+
+          takesDropdown.querySelectorAll("li a")[i].classList.add("active")
+
+        })
+      })
+
+    }
+
+  }, 350)
 })
+
+function setBubble(range, bubble) {
+
+  const halfWidth = bubble.getBoundingClientRect().width / 2 // in px
+
+  let val = range.value
+
+  for (const levels of Object.keys(rangesTextMatrix[range.name])) {
+    if (Number(val) >= Number(levels)) {
+      bubble.innerHTML = rangesTextMatrix[range.name][levels]
+    }
+  }
+
+  const min = range.min
+  const max = range.max
+
+
+  bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${(val / 50 - 1) * 1}rem - ${halfWidth}px)`
+}
+
+function hideElements() {
+  document.querySelector("#step-2").hidden = true
+  document.querySelector("#block-2-2-2").hidden = true
+  document.querySelector("#block-2-3-2").hidden = true
+  document.querySelector("#stop-button").hidden = true
+}

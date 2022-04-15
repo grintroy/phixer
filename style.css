@@ -87,10 +87,9 @@
   margin: auto;
   background-color: rgb(var(--bs-primary-rgb));
   border-radius: 0.2rem;
-  display: none;
 }
 
-#play-button-img {
+#play-button {
   width: 2.5rem !important;
   height: 2.5rem !important;
 }
@@ -280,7 +279,7 @@ input[type="range"]::-webkit-slider-thumb:focus {
   width: 9rem;
 }
 
-#upload-files {
+#upload-files-input {
   display: none;
 }
 

@@ -80,7 +80,7 @@
                 <div class="d-flex justify-content-center align-items-center bg-light border rounded-3" id="upload-window" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
                   <div id="upload-files-div">
                     <img src="upload_icon.svg" class="mx-auto d-block pb-3" id="upload-icon" alt="">
-                    <input type="file" multiple class="text-muted m-0 form-control" id="upload-files"><p class="text-muted"><a href="#/" class="text-muted">Select</a> or drag-and-drop<p>
+                    <input type="file" multiple class="text-muted m-0 form-control" id="upload-files-input"><p class="text-muted"><a href="#/" class="text-muted">Select</a> or drag-and-drop<p>
                   </div>
                 </div>
                 <div class="container-fluid px-0 mt-3 text-muted" id="uploadedFilesCountDiv">
@@ -93,7 +93,7 @@
           <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step1">Next →</button>
         </div>
 
-        <div class="container step-container" id="step-2" style="display: none; opacity: 0;">
+        <div class="container step-container" id="step-2" style="opacity: 0;">
           <h1 class="fw-bold">Step 2</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
 
@@ -109,16 +109,15 @@
                     <button class="d-flex btn btn-secondary dropdown-toggle align-items-center border rounded-3 text-muted" data-bs-offset="0, 10" type="button" id="change-takes-button" data-bs-toggle="dropdown" aria-expanded="false">
                       <img src="change_take.svg" alt="" id="change-take-button-img" class="d-inline">
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                      <li><a class="dropdown-item active" href="#">Take 01</a></li>
-                      <li><a class="dropdown-item" href="#">Take 02</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" id="takes-dropdown">
+                      <li><a class="dropdown-item active" href="#">No file uploaded</a></li>
                     </ul>
                   </div>
                   <div class="d-flex flex-row p-0">
                     <div>
                       <button class="btn btn-primary rounded-circle" id="player-button">
-                        <img src="play_button.svg" class="ps-2" id="play-button-img" alt="Play button">
-                        <div id="stop-button"></div>
+                        <img src="play_button.svg" class="ps-2" id="play-button" phixer-player-button="play" alt="Play button">
+                        <div id="stop-button" phixer-player-button="stop"></div>
                       </button>
                     </div>
                     <div class="d-flex flex-column flex-fill ms-3">
@@ -173,7 +172,7 @@
                     <div class="range-extension"></div>
                   </div>
                 </div>
-                <div class="container-fluid pe-0 switch-number" id="block-2-2-2" style="display: none;">
+                <div class="container-fluid pe-0 switch-number" id="block-2-2-2">
                   <label for="2-2-2-number" class="form-label">Select <a id="switch-2-2-1" href="#/" class="text-muted">your preference for spatial image</a> or <a id="switch-2-2-2">use linear corellation coefficient</a>.</label>
                   <div class="d-flex flex-row mt-2">
                     <input type="number" name="number-2-2" id="2-2-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="0.75">
@@ -201,10 +200,10 @@
                     <div class="range-extension"></div>
                   </div>
                 </div>
-                <div class="container-fluid pe-0 switch-number" id="block-2-2-2" style="display: none;">
+                <div class="container-fluid pe-0 switch-number" id="block-2-3-2">
                   <label for="2-3-2-number" class="form-label">Choose <a id="switch-2-3-1" href="#/" class="text-muted">the precision</a> or <a id="switch-2-3-2">enter the sampling rate for analysis</a>.</label>
                   <div class="d-flex flex-row mt-2">
-                    <input type="number" name="number-2-2" id="2-3-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="11025">
+                    <input type="number" name="number-2-3" id="2-3-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="11025">
                     <p class="text-muted fs-6 align-self-center m-3">samples per second</p>
                   </div>
                 </div>
