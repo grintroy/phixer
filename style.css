@@ -3,10 +3,6 @@
   --primary-rgb-darker: 250, 225, 70;
 }
 
-.p5Canvas {
-  display: none;
-}
-
 #header-hr {
   border-top: 5px solid black;
   opacity: 1;

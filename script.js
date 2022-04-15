@@ -27,25 +27,6 @@ let phixer
 let player
 hideElements()
 
-function setup() {
-
-}
-
-function draw() {
-
-}
-
-function keyPressed() {
-  switch (keyCode) {
-    case LEFT_ARROW:
-      phixer.takes[0].player.start()
-      break;
-    case RIGHT_ARROW:
-      console.log(inputFiles);
-      break;
-  }
-}
-
 class PlayerButton {
 
   constructor(element) {
@@ -245,10 +226,11 @@ buttonStep1.addEventListener("click", () => {
 
     })
 
-    {
-      console.log(`Current connection (default): ${phixer.takes[0].name}.`)
+    { // Takes dropdown initialization
 
-      // Takes dropdown menu initialization
+      try {
+        console.log(`Current connection (default): ${phixer.takes[0].name}.`)
+      } catch { }
 
       const takesDropdown = document.querySelector("#takes-dropdown")
 
@@ -282,6 +264,48 @@ buttonStep1.addEventListener("click", () => {
 
         })
       })
+
+    }
+
+    { // p5 waveform
+
+      const playerWavElement = document.querySelector("#player")
+      let elWidth = playerWavElement.getBoundingClientRect().width
+      let elHeight = playerWavElement.getBoundingClientRect().height
+
+      const playerSketch = (p) => {
+        p.setup = () => {
+          p.noCanvas()
+          p.createCanvas(elWidth, elHeight)
+
+          const bandWidth = 6 // in pixels
+          p.strokeWeight(bandWidth / 2)
+          const data = phixer.player.connectedTake.arrayBuffer
+          const sampleRate = phixer.player.connectedTake.sampleRate
+
+          let inpoint = 0.2 // in sec
+          let inpointSamples = inpoint * sampleRate
+          let outpoint = 0.4 // in sec
+          let outpointSamples = outpoint * sampleRate
+          let durationSamples = outpointSamples - inpointSamples
+
+          const yMargin = 6 // in px, distance from the loudest point to the border of the canvas
+          const yMarginCoef = (elHeight - yMargin * 2) / elHeight
+
+          const newData = data.slice(inpointSamples, outpointSamples)
+
+          const pixelToSampleRatio = (durationSamples) / elWidth
+
+          for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
+            const lineHeight = Math.abs(newData[Math.floor(i)]) * yMarginCoef * elHeight
+            const margin = (elHeight - lineHeight) / 2
+            p.line(i / (pixelToSampleRatio), margin, i / (pixelToSampleRatio), margin + lineHeight)
+          }
+
+        }
+      }
+
+      const p5js = new p5(playerSketch, playerWavElement)
 
     }
 

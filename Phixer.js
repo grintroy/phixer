@@ -74,6 +74,7 @@ class Phixer {
 
 		connect(take) {
 			this.connectedTonePlayer = take.player
+			this.connectedTake = take
 		}
 	}
 
