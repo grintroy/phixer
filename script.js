@@ -25,7 +25,9 @@ let inputFiles = []
 
 let phixer
 let player
+let playerSketch
 hideElements()
+const inputChanged = new Event("inputChanged")
 
 class PlayerButton {
 
@@ -34,21 +36,10 @@ class PlayerButton {
     this.buttonElement = element
     this.playButton = element.querySelector("[phixer-player-button='play']")
     this.stopButton = element.querySelector("[phixer-player-button='stop']")
-
-    this.initConnection()
-  }
-
-  initConnection() {
-    this.player.connectedTonePlayer.onstop = () => {
-      playerButton.stop()
-    }
   }
 
   updateConnection() {
-    this.player.connectedTonePlayer.onstop = null
     this.player = phixer.player
-
-    this.initConnection()
   }
 
   start() {
@@ -56,7 +47,8 @@ class PlayerButton {
     this.buttonElement.style.backgroundColor = "black"
     this.stopButton.hidden = false
 
-    this.player.connectedTonePlayer.start()
+    Tone.Transport.start(this.player.inPoint).stop(this.player.outPoint)
+
   }
 
   stop() {
@@ -72,15 +64,21 @@ let playerButton
 
 playerButtonElement.onclick = () => {
 
-  if (!playerButton) playerButton = new PlayerButton(playerButtonElement)
+  if (!playerButton) {
+    try {
+      playerButton = new PlayerButton(playerButtonElement)
+    } catch {
+      console.warn("No file(s) uploaded.")
+      return
+    }
+  }
 
-  const state = phixer.player.connectedTonePlayer.state
+  const state = Tone.Transport.state
 
   if (state === "stopped") {
     playerButton.start()
-
   } else if (state === "started") {
-    playerButton.player.connectedTonePlayer.stop()
+    playerButton.stop()
   }
 }
 
@@ -156,12 +154,13 @@ uploadFilesInput.addEventListener("change", (e) => {
     inputFiles.push(file)
     console.log('File(s) uploaded: ' + file.name)
   }
+  document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
 })
 
 // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
 
 function dropHandler(event) {
-  console.log('File(s) dropped');
+  console.log('File(s) dropped')
 
   // Prevent default behavior (Prevent file from being opened)
   event.preventDefault();
@@ -184,8 +183,7 @@ function dropHandler(event) {
   }
 
   document.querySelector("#upload-window").style.borderWidth = null
-
-  const filesCounter = document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
+  document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
 }
 
 function dragOverHandler(event) {
@@ -205,6 +203,8 @@ function dragLeaveHandler(event) {
 }
 
 buttonStep1.addEventListener("click", () => {
+
+  const playerWavElement = document.querySelector("#player")
 
   phixer = new Phixer(inputFiles)
 
@@ -230,64 +230,83 @@ buttonStep1.addEventListener("click", () => {
 
       try {
         console.log(`Current connection (default): ${phixer.takes[0].name}.`)
-      } catch { }
 
-      const takesDropdown = document.querySelector("#takes-dropdown")
+        const takesDropdown = document.querySelector("#takes-dropdown")
 
-      if (phixer.takes) takesDropdown.innerHTML = ""
+        if (phixer.takes) takesDropdown.innerHTML = ""
 
-      phixer.takes.forEach((take) => {
-        takesDropdown.innerHTML += `<li><a class="dropdown-item" href="#">${take.name}</a></li>`
-      })
-
-      takesDropdown.querySelectorAll("li a")[0].classList.add("active")
-
-      takesDropdown.querySelectorAll("li a").forEach((option, i) => {
-
-        option.addEventListener("click", () => {
-
-          phixer.player.connectedTonePlayer.stop()
-
-          phixer.player.connect(phixer.takes[i])
-
-          console.log(`Current connection: ${phixer.takes[i].name}.`)
-
-          try {
-            playerButton.updateConnection()
-          } catch { }
-
-          takesDropdown.querySelectorAll("li a").forEach((item) => {
-            item.classList.remove("active")
-          })
-
-          takesDropdown.querySelectorAll("li a")[i].classList.add("active")
-
+        phixer.takes.forEach((take) => {
+          takesDropdown.innerHTML += `<li><a class="dropdown-item" href="#/">${take.name}</a></li>`
         })
-      })
+
+        takesDropdown.querySelectorAll("li a")[0].classList.add("active")
+
+        takesDropdown.querySelectorAll("li a").forEach((option, i) => {
+
+          option.addEventListener("click", () => {
+
+            Tone.Transport.stop()
+            phixer.player.connect(phixer.takes[i])
+            playerWavElement.dispatchEvent(inputChanged)
+            console.log(`Current connection: ${phixer.takes[i].name}.`)
+
+            try {
+              playerButton.updateConnection()
+            } catch { }
+
+            takesDropdown.querySelectorAll("li a").forEach((item) => {
+              item.classList.remove("active")
+            })
+
+            takesDropdown.querySelectorAll("li a")[i].classList.add("active")
+
+          })
+        })
+      } catch { }
 
     }
 
     { // p5 waveform
 
-      const playerWavElement = document.querySelector("#player")
-      let elWidth = playerWavElement.getBoundingClientRect().width
-      let elHeight = playerWavElement.getBoundingClientRect().height
-
-      const playerSketch = (p) => {
+      playerSketch = (p) => {
         p.setup = () => {
+
           p.noCanvas()
+          drawWaveform()
+
+          // Schedule re-render when the window is resized
+
+          window.addEventListener("resize", () => {
+            drawWaveform()
+          })
+
+          playerWavElement.addEventListener("inputChanged", () => {
+    				drawWaveform()
+    			})
+
+        }
+
+        function drawWaveform() {
+
+          p.remove()
+
+          const elWidth = playerWavElement.clientWidth
+          const elHeight = playerWavElement.clientHeight
+
           p.createCanvas(elWidth, elHeight)
 
           const bandWidth = 6 // in pixels
+          const roundCorners = 4 // in px
+          p.stroke(204, 204, 204)
           p.strokeWeight(bandWidth / 2)
           const data = phixer.player.connectedTake.arrayBuffer
           const sampleRate = phixer.player.connectedTake.sampleRate
 
-          let inpoint = 0.2 // in sec
-          let inpointSamples = inpoint * sampleRate
-          let outpoint = 0.4 // in sec
-          let outpointSamples = outpoint * sampleRate
-          let durationSamples = outpointSamples - inpointSamples
+          const inpoint = phixer.preferences.inPoint // in sec
+          const inpointSamples = inpoint * sampleRate
+          const outpoint = phixer.preferences.outPoint // in sec
+          const outpointSamples = outpoint * sampleRate
+          const durationSamples = outpointSamples - inpointSamples
 
           const yMargin = 6 // in px, distance from the loudest point to the border of the canvas
           const yMarginCoef = (elHeight - yMargin * 2) / elHeight
@@ -296,19 +315,125 @@ buttonStep1.addEventListener("click", () => {
 
           const pixelToSampleRatio = (durationSamples) / elWidth
 
+          let emptySpacePointX
+          let emptySpaceLinesArray = []
+          const emptySpaceHeight = elHeight - yMargin * 2
+
           for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
-            const lineHeight = Math.abs(newData[Math.floor(i)]) * yMarginCoef * elHeight
-            const margin = (elHeight - lineHeight) / 2
-            p.line(i / (pixelToSampleRatio), margin, i / (pixelToSampleRatio), margin + lineHeight)
+
+            const pixelX = i / pixelToSampleRatio
+
+            if (i < newData.length) {
+              const lineHeight = Math.abs(newData[Math.floor(i)]) * yMarginCoef * elHeight
+              const margin = (elHeight - lineHeight) / 2
+              p.line(pixelX, margin, pixelX, margin + lineHeight)
+            } else if (!emptySpacePointX) {
+              emptySpacePointX = pixelX
+              break
+            }
           }
 
+          for (let i = - emptySpaceHeight + emptySpacePointX; i < elWidth; i += bandWidth * 2) {
+            emptySpaceLinesArray.push({
+              x1: i,
+              y1: yMargin + emptySpaceHeight,
+              x2: i + emptySpaceHeight,
+              y2: yMargin
+            })
+          }
+
+          if (emptySpacePointX < elWidth) {
+            emptySpaceLinesArray.forEach((line) => {
+              if (line.x1 < emptySpacePointX) {
+                const diff = emptySpacePointX - line.x1
+                line.x1 = emptySpacePointX
+                line.y1 -= diff
+              }
+              p.line(line.x1, line.y1, line.x2, line.y2)
+            })
+
+            p.fill(0, 0)
+            p.rect(emptySpacePointX, yMargin, elWidth - emptySpacePointX + bandWidth / 2, elHeight - yMargin * 2)
+          }
         }
       }
 
-      const p5js = new p5(playerSketch, playerWavElement)
+      try {
+        const p5js = new p5(playerSketch, playerWavElement)
+      } catch { }
 
     }
 
+    { // Listeners for player's in-out points
+
+      const inOutPointElements = document.querySelectorAll(".in-out-points")
+
+      function formatString(inputString) { // Delete any characters but numbers and remove leading zeros
+
+        inputString = inputString.replace(/\D/g, '')
+
+        while (inputString.charAt(0) == 0 && inputString) {
+          inputString = inputString.slice(1, inputString.length)
+        }
+
+        return inputString
+      }
+
+      inOutPointElements.forEach((element) => {
+
+        element.addEventListener("input", () => {
+
+          // https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
+
+          let value = element.value
+
+          value = formatString(value)
+
+          if (value.length > 4) {
+            value = value.slice(0, 4)
+          }
+
+          value = "0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
+
+          const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
+
+          element.value = valueDisplay
+
+          let min = Math.floor(value / 100)
+          let sec = value - min * 100
+
+          const timeInSec = min * 60 + sec
+
+          const attribute = element.getAttribute("phixer-in-out-points")
+          const duration = phixer.preferences.duration
+
+          let target
+          let newValue
+
+          if (attribute === "in") {
+            phixer.preferences.inPoint = timeInSec
+            min = Math.floor((timeInSec + duration) / 60)
+            sec = timeInSec + duration - min * 60
+            target = document.querySelector("#out-point")
+          } else if (attribute === "out") {
+            phixer.preferences.outPoint = timeInSec
+            min = Math.floor((timeInSec - duration) / 60)
+            sec = timeInSec - duration - min * 60
+            target = document.querySelector("#in-point")
+          }
+
+          newValue = min * 100 + sec
+
+          if (formatString(target.value) != newValue) {
+            target.value = newValue
+            target.dispatchEvent(new Event("input"))
+            phixer.player.updatePoints()
+            playerWavElement.dispatchEvent(inputChanged)
+          }
+
+        })
+      })
+    }
   }, 350)
 })
 

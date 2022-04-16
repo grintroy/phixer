@@ -16,8 +16,8 @@ class Phixer {
 		this.takes = []
 		this.preferences = {
 	    "inPoint": 0, // in seconds
-	    "outPoint": 3, // in seconds
-	    "duration": 3, // in seconds
+	    "outPoint": 15, // in seconds
+	    "duration": 15, // in seconds
 	    "targetLCC": 1, // target linear corellation coefficient
 	    "analysisSampleRate": 48000, // in samples per second
 	    "primaryTrack": 0, // index in the takes array
@@ -44,7 +44,8 @@ class Phixer {
 		}
 
 		initPlayer() {
-			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
+			this.player = new Tone.Player(this.audioBuffer, this.onload())
+			this.parent.player.connect(this.parent.takes[0])
 		}
 
 		onload() {
@@ -62,19 +63,29 @@ class Phixer {
 			]
 
 			this.button = document.getElementById("player-button")
-			this.inPoint = document.getElementById("in-point").value
-			this.outPoint = document.getElementById("out-point").value
 
-			this.duration = this.durationMatrix[0]
+			this.updatePoints()
 
 			this.takeNum = 1
 
-			this.connect(parent.takes[0])
+			this.fadeIn = 0.3
+			this.fadeOut = 0.3
+
+		}
+
+		updatePoints() {
+			this.inPoint = this.parent.preferences.inPoint
+			this.outPoint = this.parent.preferences.outPoint
+			this.duration = this.parent.preferences.duration
 		}
 
 		connect(take) {
-			this.connectedTonePlayer = take.player
+			try {
+				this.connectedTonePlayer.disconnect()
+			} catch {	}
 			this.connectedTake = take
+			this.connectedTonePlayer = take.player
+			this.connectedTonePlayer.toDestination()
 		}
 	}
 

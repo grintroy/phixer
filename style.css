@@ -91,7 +91,6 @@
 }
 
 #player {
-  border-top-right-radius: 0 !important;
   height: 4rem;
 }
 
@@ -147,6 +146,10 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+input[type="text"] {
+  -moz-appearance: textfield;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -158,6 +161,10 @@ input::-webkit-inner-spin-button {
 }
 
 input[type="number"]::placeholder {
+  color: #ccc;
+}
+
+input[type="text"]::placeholder {
   color: #ccc;
 }
 
@@ -196,25 +203,36 @@ input[type="range"]::-webkit-slider-thumb:focus {
 
 .range-wrap {
   position: relative;
-  margin-top: 1rem;
-  padding-bottom: 3.5rem;
+  margin-top: 1rem !important;
+  padding-bottom: 3.5rem !important;
 }
 
-.range-wrap::before {
+.ends-faded {
+  position: absolute;
+  height: 100%;
+  z-index: 1040;
+}
+
+.ends-faded::before {
   content: "";
   width: 3rem;
-  height: 1em;
+  height: 100%;
   background: linear-gradient(90deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
-  position: absolute;
 }
 
-.range-wrap::after {
+.ends-faded::after {
   content: "";
   width: 3rem;
-  height: 1em;
+  height: 100%;
   background: linear-gradient(-90deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
-  position: absolute;
-  right: 0;
+}
+
+.ends-faded-darker::before {
+  background: linear-gradient(90deg, rgba(248, 249, 250, 1), rgba(248, 249, 250, 0));
+}
+
+.ends-faded-darker::after {
+  background: linear-gradient(-90deg, rgba(248, 249, 250, 1), rgba(248, 249, 250, 0));
 }
 
 .range-extension {
@@ -231,6 +249,7 @@ input[type="range"]::-webkit-slider-thumb:focus {
 
 .range-wrap-center {
   flex-basis: 100%;
+  z-index: 1040;
 }
 
 .bubble {
@@ -243,6 +262,7 @@ input[type="range"]::-webkit-slider-thumb:focus {
   border: 1px rgb(222, 226, 230) solid;
   position: absolute;
   box-sizing: content-box;
+  z-index: 1080;
 }
 
 .bubble::before {
@@ -289,4 +309,14 @@ input[type="range"]::-webkit-slider-thumb:focus {
 
 .step-container {
   transition: opacity 0.35s;
+}
+
+#player-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-top-right-radius: 0 !important;
+}
+
+.dropdown-menu {
+  z-index: 1055;
 }
