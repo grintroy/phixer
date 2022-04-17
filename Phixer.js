@@ -6,6 +6,8 @@ class Phixer {
 
 		console.log("Phixer is initialized. Files: " + input.length)
 
+		this.loaded = new EventTarget()
+
 		if (!input) {
 			console.warn(`Phixer needs an input when initializing`)
 			return
@@ -86,6 +88,7 @@ class Phixer {
 			this.connectedTake = take
 			this.connectedTonePlayer = take.player
 			this.connectedTonePlayer.toDestination()
+			this.parent.loaded.dispatchEvent(new Event("loaded"))
 		}
 	}
 

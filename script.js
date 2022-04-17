@@ -1,33 +1,10 @@
-{
-  // Test. Populate two arrays with sine wave values.
-
-  const audio1 = []
-  const audio2 = []
-  const phaseDifference =  30 * (Math.PI / 180) // in radians
-  const sampleRate = 44100  // samples per second
-
-  for (let t = 0; t < 1; t += 1/sampleRate) {
-      audio1.push(sinDisplacement(1, 1.6, t, 0))
-      audio2.push(sinDisplacement(1, 1.1, t, phaseDifference))
-  }
-
-  // Phixer.takes.push(new Phixer.Take(audio1, "test"))
-
-  // console.log("Input:", Phixer.takes[0].buffer)
-  // console.log("Output:", Phixer.resample(Phixer.takes[0]))
-
-  function sinDisplacement(A, freq, t, phi) {
-    return A * Math.sin(2 * Math.PI * freq * t + phi)
-  }
-}
-
 let inputFiles = []
 
 let phixer
 let player
 let playerSketch
-hideElements()
 const inputChanged = new Event("inputChanged")
+let playerWavElement
 
 class PlayerButton {
 
@@ -109,6 +86,12 @@ const uploadFilesLink = uploadFilesDiv.querySelector("a")
 
 const buttonStep1 = document.querySelector("#btn-step1")
 
+const spinner = document.querySelector("#spinner")
+const spinnerContainer = document.querySelector("#spinner-container")
+const footer = document.querySelector("#footer")
+
+hideElements()
+
 allRNSwitches.forEach(block => {
   const range = block.querySelector(".switch-range")
   const number = block.querySelector(".switch-number")
@@ -131,15 +114,278 @@ allBtnNext.forEach(button => {
 
   button.addEventListener("click", () => {
     currentStep.style.opacity = 0
+    footer.style.opacity = 0
+    initButtonNextStep(id)
     setTimeout(() => {
       currentStep.hidden = true
-      nextStep.hidden = false
-      setTimeout(() => {
-        nextStep.style.opacity = 1
-      }, 1);
+      if (id !== 1) {
+        initNextStep(currentStep, nextStep, id + 1)
+      } else {
+        phixer.loaded.addEventListener("loaded", () => {
+          initNextStep(currentStep, nextStep, id + 1)
+        }, { once: true })
+      }
     }, 350)
   })
 })
+
+function initButtonNextStep(nStepId) {
+  eval('initButtonStep' + nStepId + '()')
+}
+
+function initNextStep(currentStep, nextStep, nStepId) {
+  spinnerContainer.style.opacity = 0
+  nextStep.hidden = false
+  nextStep.style.opacity = 1
+  footer.style.opacity = 1
+
+  setTimeout(() => {
+    spinner.hidden = true
+  }, 350)
+
+  eval('initStep' + nStepId + '()')
+}
+
+function initButtonStep1() {
+  playerWavElement = document.querySelector("#player")
+  spinner.hidden = false
+  spinnerContainer.style.opacity = 1
+  phixer = new Phixer(inputFiles)
+}
+
+function initStep2() {
+
+  allRanges.forEach(wrap => {
+
+    const range = wrap.querySelector(".form-range")
+    const bubble = wrap.querySelector(".bubble")
+    setBubble(range, bubble)
+
+    range.addEventListener("input", () => {
+      range.addEventListener("input", () => {
+        setBubble(range, bubble)
+      })
+      setBubble(range, bubble)
+    })
+    setBubble(range, bubble)
+
+  })
+
+  { // Takes dropdown initialization
+
+    try {
+      console.log(`Current connection (default): ${phixer.takes[0].name}.`)
+
+      const takesDropdown = document.querySelector("#takes-dropdown")
+
+      if (phixer.takes) takesDropdown.innerHTML = ""
+
+      phixer.takes.forEach((take) => {
+        takesDropdown.innerHTML += `<li><a class="dropdown-item" href="#/">${take.name}</a></li>`
+      })
+
+      takesDropdown.querySelectorAll("li a")[0].classList.add("active")
+
+      takesDropdown.querySelectorAll("li a").forEach((option, i) => {
+
+        option.addEventListener("click", () => {
+
+          Tone.Transport.stop()
+          phixer.player.connect(phixer.takes[i])
+          playerWavElement.dispatchEvent(inputChanged)
+          console.log(`Current connection: ${phixer.takes[i].name}.`)
+
+          try {
+            playerButton.updateConnection()
+          } catch { }
+
+          takesDropdown.querySelectorAll("li a").forEach((item) => {
+            item.classList.remove("active")
+          })
+
+          takesDropdown.querySelectorAll("li a")[i].classList.add("active")
+
+        })
+      })
+    } catch { }
+
+  }
+
+  { // p5 waveform
+
+    playerSketch = (p) => {
+      p.setup = () => {
+
+        p.noCanvas()
+        drawWaveform()
+
+        // Schedule re-render when the window is resized
+
+        window.addEventListener("resize", () => {
+          drawWaveform()
+        })
+
+        playerWavElement.addEventListener("inputChanged", () => {
+          drawWaveform()
+        })
+
+      }
+
+      function drawWaveform() {
+
+        p.remove()
+
+        const elWidth = playerWavElement.clientWidth
+        const elHeight = playerWavElement.clientHeight
+
+
+        p.createCanvas(elWidth, elHeight)
+
+        const bandWidth = 6 // in pixels
+        const roundCorners = 4 // in px
+        p.stroke(204, 204, 204)
+        p.strokeWeight(bandWidth / 2)
+        const data = phixer.player.connectedTake.arrayBuffer
+
+        const sampleRate = phixer.player.connectedTake.sampleRate
+
+
+        const inpoint = phixer.preferences.inPoint // in sec
+        const inpointSamples = inpoint * sampleRate
+        const outpoint = phixer.preferences.outPoint // in sec
+        const outpointSamples = outpoint * sampleRate
+        const durationSamples = outpointSamples - inpointSamples
+
+        const yMargin = 6 // in px, distance from the loudest point to the border of the canvas
+        const yMarginCoef = (elHeight - yMargin * 2) / elHeight
+
+        const newData = data.slice(inpointSamples, outpointSamples)
+
+        const pixelToSampleRatio = (durationSamples) / elWidth
+
+        let emptySpacePointX
+        let emptySpaceLinesArray = []
+        const emptySpaceHeight = elHeight - yMargin * 2
+
+        for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
+
+          const pixelX = i / pixelToSampleRatio
+
+          if (i < newData.length) {
+            const lineHeight = Math.abs(newData[Math.floor(i)]) * yMarginCoef * elHeight
+            const margin = (elHeight - lineHeight) / 2
+            p.line(pixelX, margin, pixelX, margin + lineHeight)
+          } else if (!emptySpacePointX) {
+            emptySpacePointX = pixelX
+            break
+          }
+        }
+
+        for (let i = - emptySpaceHeight + emptySpacePointX; i < elWidth; i += bandWidth * 2) {
+          emptySpaceLinesArray.push({
+            x1: i,
+            y1: yMargin + emptySpaceHeight,
+            x2: i + emptySpaceHeight,
+            y2: yMargin
+          })
+        }
+
+        if (emptySpacePointX < elWidth) {
+          emptySpaceLinesArray.forEach((line) => {
+            if (line.x1 < emptySpacePointX) {
+              const diff = emptySpacePointX - line.x1
+              line.x1 = emptySpacePointX
+              line.y1 -= diff
+            }
+            p.line(line.x1, line.y1, line.x2, line.y2)
+          })
+
+          p.fill(0, 0)
+          p.rect(emptySpacePointX, yMargin, elWidth - emptySpacePointX + bandWidth / 2, elHeight - yMargin * 2)
+        }
+      }
+    }
+
+    const p5js = new p5(playerSketch, playerWavElement)
+
+    // try {
+    //   const p5js = new p5(playerSketch, playerWavElement)
+    // } catch { }
+
+  }
+
+  { // Listeners for player's in-out points
+
+    const inOutPointElements = document.querySelectorAll(".in-out-points")
+
+    function formatString(inputString) { // Delete any characters but numbers and remove leading zeros
+
+      inputString = inputString.replace(/\D/g, '')
+
+      while (inputString.charAt(0) == 0 && inputString) {
+        inputString = inputString.slice(1, inputString.length)
+      }
+
+      return inputString
+    }
+
+    inOutPointElements.forEach((element) => {
+
+      element.addEventListener("input", () => {
+
+        // https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
+
+        let value = element.value
+
+        value = formatString(value)
+
+        if (value.length > 4) {
+          value = value.slice(0, 4)
+        }
+
+        value = "0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
+
+        const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
+
+        element.value = valueDisplay
+
+        let min = Math.floor(value / 100)
+        let sec = value - min * 100
+
+        const timeInSec = min * 60 + sec
+
+        const attribute = element.getAttribute("phixer-in-out-points")
+        const duration = phixer.preferences.duration
+
+        let target
+        let newValue
+
+        if (attribute === "in") {
+          phixer.preferences.inPoint = timeInSec
+          min = Math.floor((timeInSec + duration) / 60)
+          sec = timeInSec + duration - min * 60
+          target = document.querySelector("#out-point")
+        } else if (attribute === "out") {
+          phixer.preferences.outPoint = timeInSec
+          min = Math.floor((timeInSec - duration) / 60)
+          sec = timeInSec - duration - min * 60
+          target = document.querySelector("#in-point")
+        }
+
+        newValue = min * 100 + sec
+
+        if (formatString(target.value) != newValue) {
+          target.value = newValue
+          target.dispatchEvent(new Event("input"))
+          phixer.player.updatePoints()
+          playerWavElement.dispatchEvent(inputChanged)
+        }
+
+      })
+    })
+  }
+
+}
 
 // https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
 // https://stackoverflow.com/questions/11406605/how-to-make-a-link-act-as-a-file-input
@@ -202,241 +448,6 @@ function dragLeaveHandler(event) {
   event.preventDefault();
 }
 
-buttonStep1.addEventListener("click", () => {
-
-  const playerWavElement = document.querySelector("#player")
-
-  phixer = new Phixer(inputFiles)
-
-  setTimeout(() => {
-
-    allRanges.forEach(wrap => {
-
-      const range = wrap.querySelector(".form-range")
-      const bubble = wrap.querySelector(".bubble")
-      setBubble(range, bubble)
-
-      range.addEventListener("input", () => {
-        range.addEventListener("input", () => {
-          setBubble(range, bubble)
-        })
-        setBubble(range, bubble)
-      })
-      setBubble(range, bubble)
-
-    })
-
-    { // Takes dropdown initialization
-
-      try {
-        console.log(`Current connection (default): ${phixer.takes[0].name}.`)
-
-        const takesDropdown = document.querySelector("#takes-dropdown")
-
-        if (phixer.takes) takesDropdown.innerHTML = ""
-
-        phixer.takes.forEach((take) => {
-          takesDropdown.innerHTML += `<li><a class="dropdown-item" href="#/">${take.name}</a></li>`
-        })
-
-        takesDropdown.querySelectorAll("li a")[0].classList.add("active")
-
-        takesDropdown.querySelectorAll("li a").forEach((option, i) => {
-
-          option.addEventListener("click", () => {
-
-            Tone.Transport.stop()
-            phixer.player.connect(phixer.takes[i])
-            playerWavElement.dispatchEvent(inputChanged)
-            console.log(`Current connection: ${phixer.takes[i].name}.`)
-
-            try {
-              playerButton.updateConnection()
-            } catch { }
-
-            takesDropdown.querySelectorAll("li a").forEach((item) => {
-              item.classList.remove("active")
-            })
-
-            takesDropdown.querySelectorAll("li a")[i].classList.add("active")
-
-          })
-        })
-      } catch { }
-
-    }
-
-    { // p5 waveform
-
-      playerSketch = (p) => {
-        p.setup = () => {
-
-          p.noCanvas()
-          drawWaveform()
-
-          // Schedule re-render when the window is resized
-
-          window.addEventListener("resize", () => {
-            drawWaveform()
-          })
-
-          playerWavElement.addEventListener("inputChanged", () => {
-    				drawWaveform()
-    			})
-
-        }
-
-        function drawWaveform() {
-
-          p.remove()
-
-          const elWidth = playerWavElement.clientWidth
-          const elHeight = playerWavElement.clientHeight
-
-          p.createCanvas(elWidth, elHeight)
-
-          const bandWidth = 6 // in pixels
-          const roundCorners = 4 // in px
-          p.stroke(204, 204, 204)
-          p.strokeWeight(bandWidth / 2)
-          const data = phixer.player.connectedTake.arrayBuffer
-          const sampleRate = phixer.player.connectedTake.sampleRate
-
-          const inpoint = phixer.preferences.inPoint // in sec
-          const inpointSamples = inpoint * sampleRate
-          const outpoint = phixer.preferences.outPoint // in sec
-          const outpointSamples = outpoint * sampleRate
-          const durationSamples = outpointSamples - inpointSamples
-
-          const yMargin = 6 // in px, distance from the loudest point to the border of the canvas
-          const yMarginCoef = (elHeight - yMargin * 2) / elHeight
-
-          const newData = data.slice(inpointSamples, outpointSamples)
-
-          const pixelToSampleRatio = (durationSamples) / elWidth
-
-          let emptySpacePointX
-          let emptySpaceLinesArray = []
-          const emptySpaceHeight = elHeight - yMargin * 2
-
-          for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
-
-            const pixelX = i / pixelToSampleRatio
-
-            if (i < newData.length) {
-              const lineHeight = Math.abs(newData[Math.floor(i)]) * yMarginCoef * elHeight
-              const margin = (elHeight - lineHeight) / 2
-              p.line(pixelX, margin, pixelX, margin + lineHeight)
-            } else if (!emptySpacePointX) {
-              emptySpacePointX = pixelX
-              break
-            }
-          }
-
-          for (let i = - emptySpaceHeight + emptySpacePointX; i < elWidth; i += bandWidth * 2) {
-            emptySpaceLinesArray.push({
-              x1: i,
-              y1: yMargin + emptySpaceHeight,
-              x2: i + emptySpaceHeight,
-              y2: yMargin
-            })
-          }
-
-          if (emptySpacePointX < elWidth) {
-            emptySpaceLinesArray.forEach((line) => {
-              if (line.x1 < emptySpacePointX) {
-                const diff = emptySpacePointX - line.x1
-                line.x1 = emptySpacePointX
-                line.y1 -= diff
-              }
-              p.line(line.x1, line.y1, line.x2, line.y2)
-            })
-
-            p.fill(0, 0)
-            p.rect(emptySpacePointX, yMargin, elWidth - emptySpacePointX + bandWidth / 2, elHeight - yMargin * 2)
-          }
-        }
-      }
-
-      try {
-        const p5js = new p5(playerSketch, playerWavElement)
-      } catch { }
-
-    }
-
-    { // Listeners for player's in-out points
-
-      const inOutPointElements = document.querySelectorAll(".in-out-points")
-
-      function formatString(inputString) { // Delete any characters but numbers and remove leading zeros
-
-        inputString = inputString.replace(/\D/g, '')
-
-        while (inputString.charAt(0) == 0 && inputString) {
-          inputString = inputString.slice(1, inputString.length)
-        }
-
-        return inputString
-      }
-
-      inOutPointElements.forEach((element) => {
-
-        element.addEventListener("input", () => {
-
-          // https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
-
-          let value = element.value
-
-          value = formatString(value)
-
-          if (value.length > 4) {
-            value = value.slice(0, 4)
-          }
-
-          value = "0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
-
-          const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
-
-          element.value = valueDisplay
-
-          let min = Math.floor(value / 100)
-          let sec = value - min * 100
-
-          const timeInSec = min * 60 + sec
-
-          const attribute = element.getAttribute("phixer-in-out-points")
-          const duration = phixer.preferences.duration
-
-          let target
-          let newValue
-
-          if (attribute === "in") {
-            phixer.preferences.inPoint = timeInSec
-            min = Math.floor((timeInSec + duration) / 60)
-            sec = timeInSec + duration - min * 60
-            target = document.querySelector("#out-point")
-          } else if (attribute === "out") {
-            phixer.preferences.outPoint = timeInSec
-            min = Math.floor((timeInSec - duration) / 60)
-            sec = timeInSec - duration - min * 60
-            target = document.querySelector("#in-point")
-          }
-
-          newValue = min * 100 + sec
-
-          if (formatString(target.value) != newValue) {
-            target.value = newValue
-            target.dispatchEvent(new Event("input"))
-            phixer.player.updatePoints()
-            playerWavElement.dispatchEvent(inputChanged)
-          }
-
-        })
-      })
-    }
-  }, 350)
-})
-
 function setBubble(range, bubble) {
 
   const halfWidth = bubble.getBoundingClientRect().width / 2 // in px
@@ -461,4 +472,6 @@ function hideElements() {
   document.querySelector("#block-2-2-2").hidden = true
   document.querySelector("#block-2-3-2").hidden = true
   document.querySelector("#stop-button").hidden = true
+  spinner.hidden = true
+  spinnerContainer.style.opacity = 1
 }

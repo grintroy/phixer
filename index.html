@@ -63,9 +63,17 @@
       </nav>
     </header>
 
-    <div class="container my-4 p-0">
-      <main>
+    <div class="container-fluid position-absolute p-0 m-0 d-flex pe-none" style="width: 100%; height: 82%">
+      <div class="d-flex flex-fill justify-content-center align-items-center pe-none" id="spinner-container" style="width: 100%; height: 100%">
+        <div class="spinner-grow" role="status" id="spinner">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
 
+    <div class="container my-4 p-0">
+
+      <main>
         <div class="container step-container" id="step-1" style="opacity: 1">
           <h1 class="fw-bold">Step 1</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
@@ -225,10 +233,10 @@
           <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step2">Next →</button>
         </div>
 
-    </main>
+      </main>
 
       <footer class="container">
-        <p class="text-muted text-end py-2">© 2022 Grigorii Troinenko</p>
+        <p class="text-muted text-end py-2" id="footer">© 2022 Grigorii Troinenko</p>
       </footer>
 
     </div>
