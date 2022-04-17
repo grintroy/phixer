@@ -1,4 +1,4 @@
-# PHIxer
+# Phixer
 
 By Gregory Troinenko
 
