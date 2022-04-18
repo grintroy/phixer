@@ -60,9 +60,6 @@ class Phixer {
 		constructor(parent) {
 
 			this.parent = parent
-			this.durationMatrix = [
-				15, 30, 45, 60
-			]
 
 			this.button = document.getElementById("player-button")
 

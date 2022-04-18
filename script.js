@@ -6,6 +6,10 @@ let playerSketch
 const inputChanged = new Event("inputChanged")
 let playerWavElement
 
+const durationMatrix = [
+  15, 30, 45, 60
+]
+
 class PlayerButton {
 
   constructor(element) {
@@ -335,9 +339,69 @@ function initStep2() {
 
   }
 
-  { // Listeners for player's in-out points
+  { // Listeners for player's in-out points and duration
 
     const inOutPointElements = document.querySelectorAll(".in-out-points")
+    const inPointElement = document.querySelector("#in-point")
+    const durationItems = document.querySelectorAll(".player-duration-item")
+    let activeDurationItem
+    updateActiveDurationItem()
+
+    function updateActiveDurationItem() {
+      activeDurationItem = Array.from(durationItems).find((element) => Array.from(element.classList).includes("active"))
+    }
+
+    function updateValues(element) {
+
+      // https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
+
+      let value = element.value
+
+      value = formatString(value)
+
+      if (value.length > 4) {
+        value = value.slice(0, 4)
+      }
+
+      value = "0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
+
+      const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
+
+      element.value = valueDisplay
+
+      let min = Math.floor(value / 100)
+      let sec = value - min * 100
+
+      const timeInSec = min * 60 + sec
+
+      const attribute = element.getAttribute("phixer-in-out-points")
+      const duration = phixer.preferences.duration
+
+      let target
+      let newValue
+
+      if (attribute === "in") {
+        phixer.preferences.inPoint = timeInSec
+        min = Math.floor((timeInSec + duration) / 60)
+        sec = timeInSec + duration - min * 60
+        target = document.querySelector("#out-point")
+      } else if (attribute === "out") {
+        phixer.preferences.outPoint = timeInSec
+        min = Math.floor((timeInSec - duration) / 60)
+        sec = timeInSec - duration - min * 60
+        target = document.querySelector("#in-point")
+      }
+
+      newValue = min * 100 + sec
+
+      if (formatString(target.value) != newValue) {
+        target.value = newValue
+        target.dispatchEvent(new Event("input"))
+        phixer.player.updatePoints()
+        playerWavElement.dispatchEvent(inputChanged)
+      }
+
+    }
 
     function formatString(inputString) { // Delete any characters but numbers and remove leading zeros
 
@@ -351,59 +415,20 @@ function initStep2() {
     }
 
     inOutPointElements.forEach((element) => {
+      element.addEventListener("input", () => updateValues(element))
+    })
 
-      element.addEventListener("input", () => {
-
-        // https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
-
-        let value = element.value
-
-        value = formatString(value)
-
-        if (value.length > 4) {
-          value = value.slice(0, 4)
-        }
-
-        value = "0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
-
-        const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
-
-        element.value = valueDisplay
-
-        let min = Math.floor(value / 100)
-        let sec = value - min * 100
-
-        const timeInSec = min * 60 + sec
-
-        const attribute = element.getAttribute("phixer-in-out-points")
-        const duration = phixer.preferences.duration
-
-        let target
-        let newValue
-
-        if (attribute === "in") {
-          phixer.preferences.inPoint = timeInSec
-          min = Math.floor((timeInSec + duration) / 60)
-          sec = timeInSec + duration - min * 60
-          target = document.querySelector("#out-point")
-        } else if (attribute === "out") {
-          phixer.preferences.outPoint = timeInSec
-          min = Math.floor((timeInSec - duration) / 60)
-          sec = timeInSec - duration - min * 60
-          target = document.querySelector("#in-point")
-        }
-
-        newValue = min * 100 + sec
-
-        if (formatString(target.value) != newValue) {
-          target.value = newValue
-          target.dispatchEvent(new Event("input"))
-          phixer.player.updatePoints()
-          playerWavElement.dispatchEvent(inputChanged)
-        }
-
+    durationItems.forEach((item, i) => {
+      item.addEventListener("click", () => {
+        phixer.preferences.duration = durationMatrix[i]
+        activeDurationItem.classList.remove("active")
+        durationItems[i].classList.add("active")
+        updateActiveDurationItem()
+        updateValues(inPointElement)
       })
     })
+
+
   }
 
 }
