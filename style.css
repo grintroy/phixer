@@ -308,7 +308,7 @@ input[type="range"]::-webkit-slider-thumb:focus {
 }
 
 .step-container {
-  transition: opacity 0.35s ;
+  transition: opacity 0.35s;
 }
 
 #player-wrapper {

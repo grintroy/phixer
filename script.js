@@ -89,6 +89,7 @@ const buttonStep1 = document.querySelector("#btn-step1")
 const spinner = document.querySelector("#spinner")
 const spinnerContainer = document.querySelector("#spinner-container")
 const footer = document.querySelector("#footer")
+const noFilesWindow = document.querySelector("#no-files")
 
 hideElements()
 
@@ -115,17 +116,26 @@ allBtnNext.forEach(button => {
   button.addEventListener("click", () => {
     currentStep.style.opacity = 0
     footer.style.opacity = 0
-    initButtonNextStep(id)
-    setTimeout(() => {
-      currentStep.hidden = true
-      if (id !== 1) {
-        initNextStep(currentStep, nextStep, id + 1)
-      } else {
-        phixer.loaded.addEventListener("loaded", () => {
+    spinner.hidden = false
+    spinnerContainer.style.opacity = 1
+
+    currentStep.ontransitionend = (e) => {
+      if (e.propertyName === "opacity") {
+
+        currentStep.hidden = true
+        footer.hidden = true
+
+        initButtonNextStep(id)
+
+        if (id !== 1 || !inputFiles.length) {
           initNextStep(currentStep, nextStep, id + 1)
-        }, { once: true })
+        } else {
+          phixer.loaded.addEventListener("loaded", () => {
+            initNextStep(currentStep, nextStep, id + 1)
+          }, { once: true })
+        }
       }
-    }, 350)
+    }
   })
 })
 
@@ -134,22 +144,33 @@ function initButtonNextStep(nStepId) {
 }
 
 function initNextStep(currentStep, nextStep, nStepId) {
-  spinnerContainer.style.opacity = 0
+
+  if (!inputFiles.length) {
+    nextStep = noFilesWindow
+  }
+
   nextStep.hidden = false
-  nextStep.style.opacity = 1
-  footer.style.opacity = 1
 
   setTimeout(() => {
-    spinner.hidden = true
-  }, 350)
+    spinnerContainer.style.opacity = 0
+    nextStep.style.opacity = 1
+    footer.style.opacity = 1
 
-  eval('initStep' + nStepId + '()')
+    nextStep.ontransitionend = (e) => {
+      if (e.propertyName === "opacity") {
+        spinner.hidden = true
+        if (!inputFiles.length) {
+          console.warn("No files uploaded. Please upload files.")
+        } else {
+          eval('initStep' + nStepId + '()')
+        }
+      }
+    }
+  }, 50);
 }
 
 function initButtonStep1() {
   playerWavElement = document.querySelector("#player")
-  spinner.hidden = false
-  spinnerContainer.style.opacity = 1
   phixer = new Phixer(inputFiles)
 }
 
@@ -468,6 +489,7 @@ function setBubble(range, bubble) {
 }
 
 function hideElements() {
+  noFilesWindow.hidden = true
   document.querySelector("#step-2").hidden = true
   document.querySelector("#block-2-2-2").hidden = true
   document.querySelector("#block-2-3-2").hidden = true
