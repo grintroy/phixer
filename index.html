@@ -74,6 +74,7 @@
     <div class="container my-4 p-0">
 
       <main>
+
         <div class="container step-container" id="no-files" style="opacity: 0">
           <h1 class="fw-bold">No files uploaded</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
@@ -89,6 +90,7 @@
             <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next">← Back</button>
           </a>
         </div>
+
         <div class="container step-container" id="step-1" style="opacity: 1">
           <h1 class="fw-bold">Step 1</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
@@ -98,7 +100,7 @@
                 <p>1.</p>
               </div>
               <div class="container-fluid pe-0">
-                <p>Select your files. <a href="#" class="text-muted">What files?</a></p>
+                <p>Select your files. <a href="#" class="text-muted what-is-that" data-bs-toggle="tooltip" data-bs-offset="0,3" data-bs-html="true" data-bs-placement="bottom" title="Phixer works through Web Audio API which only supports <b>.mp3</b>, <b>.wav</b> and <b>.ogg</b>.">What files?</a></p>
                 <div class="d-flex justify-content-center align-items-center bg-light border rounded-3" id="upload-window" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
                   <div id="upload-files-div">
                     <img src="upload_icon.svg" class="mx-auto d-block pb-3" id="upload-icon" alt="">
@@ -114,7 +116,8 @@
           <hr class="border mt-2 mb-0">
           <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step1">Next →</button>
         </div>
-        <div class="container step-container" id="step-2" style="opacity: 0;">
+
+        <div class="container step-container" id="step-2" style="opacity: 0">
           <h1 class="fw-bold">Step 2</h1>
           <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
 
@@ -193,7 +196,7 @@
                     <div class="range-wrap d-flex container-fluid p-0 m-0">
                       <div class="range-extension"></div>
                       <div class="range-wrap-center">
-                        <input type="range" class="form-range" name="range-2-2" id="2-2-1-range" min="0" max="100" value="50">
+                        <input type="range" class="form-range input-range" data-phixer-pref="targetLCC" name="range-2-2" id="2-2-1-range" min="0" max="100" value="50">
                         <output class="bubble fs-6"></output>
                       </div>
                       <div class="range-extension"></div>
@@ -203,7 +206,7 @@
                 <div class="container-fluid pe-0 switch-number" id="block-2-2-2">
                   <label for="2-2-2-number" class="form-label">Select <a id="switch-2-2-1" href="#/" class="text-muted">your preference for spatial image</a> or <a id="switch-2-2-2">use linear corellation coefficient</a>.</label>
                   <div class="d-flex flex-row mt-2">
-                    <input type="number" name="number-2-2" id="2-2-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="0.75">
+                    <input type="text" name="number-2-2" inputmode="decimal" id="2-2-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2 input-number" min="0" max="1" placeholder="0.75" data-phixer-pref="targetLCC" pattern="[^\d.]">
                     <p class="text-muted fs-6 align-self-center m-3">out of 1</p>
                   </div>
                 </div>
@@ -225,7 +228,7 @@
                     <div class="range-wrap d-flex container-fluid p-0 m-0">
                       <div class="range-extension"></div>
                       <div class="range-wrap-center">
-                        <input type="range" class="form-range" name="range-2-3" id="2-3-1-range" min="0" max="100" value="50">
+                        <input type="range" class="form-range input-range" data-phixer-pref="analysisSampleRate" name="range-2-3" id="2-3-1-range" min="0" max="100" value="50">
                         <output class="bubble fs-6"></output>
                       </div>
                       <div class="range-extension"></div>
@@ -236,7 +239,7 @@
                 <div class="container-fluid pe-0 switch-number" id="block-2-3-2">
                   <label for="2-3-2-number" class="form-label">Choose <a id="switch-2-3-1" href="#/" class="text-muted">the precision</a> or <a id="switch-2-3-2">enter the sampling rate for analysis</a>.</label>
                   <div class="d-flex flex-row mt-2">
-                    <input type="number" name="number-2-3" id="2-3-2-number" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2" min="0" max="1" placeholder="11025">
+                    <input type="text" name="number-2-3" id="2-3-2-number" inputmode="decimal" class="form-control bg-light border rounded-3 number-big fs-2 text-black fw-bold px-3 py-2 input-number" min="0" placeholder="44100" data-phixer-pref="analysisSampleRate">
                     <p class="text-muted fs-6 align-self-center m-3">samples per second</p>
                   </div>
                 </div>
@@ -256,12 +259,12 @@
 
     </div>
 
+     <!-- Popper and Bootstrap JS -->
+     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+
     <!-- Main JS -->
     <script src="script.js" charset="utf-8"></script>
-
-    <!-- Popper and Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 
   </body>
 </html>

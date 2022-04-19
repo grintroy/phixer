@@ -334,3 +334,8 @@ input[type="range"]::-webkit-slider-thumb:focus {
 #footer {
   transition: opacity 0.35s;
 }
+
+.what-is-that {
+  cursor: help;
+  white-space: nowrap;
+}

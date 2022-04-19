@@ -88,6 +88,15 @@ const rangesTextMatrix = {
   }
 }
 
+// Bootstrap Tooltips component
+
+let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+let tooltipList = tooltipTriggerList.map((tooltipTriggerEl) => {
+  return new bootstrap.Tooltip(tooltipTriggerEl, {
+    boundary: document.body
+  })
+})
+
 const allRanges = document.querySelectorAll(".range-wrap")
 const allRNSwitches = document.querySelectorAll(".switch-range-number")
 const allBtnNext = document.querySelectorAll(".button-next")
@@ -187,7 +196,13 @@ function initButtonStep1() {
   phixer = new Phixer(inputFiles)
 }
 
+function initButtonStep2() {
+  console.log(phixer.preferences)
+}
+
 function initStep2() {
+
+  document.getElementById("2-3-2-number").placeholder = phixer.player.sampleRate
 
   allRanges.forEach(wrap => {
 
@@ -227,6 +242,7 @@ function initStep2() {
           Tone.Transport.stop()
           phixer.player.connect(phixer.takes[i])
           playerWavElement.dispatchEvent(inputChanged)
+          phixer.preferences.primaryTake = i
           console.log(`Current connection: ${phixer.takes[i].name}.`)
 
           try {
@@ -410,13 +426,10 @@ function initStep2() {
     }
 
     function formatString(inputString) { // Delete any characters but numbers and remove leading zeros
-
       inputString = inputString.replace(/\D/g, '')
-
       while (inputString.charAt(0) == 0 && inputString) {
         inputString = inputString.slice(1, inputString.length)
       }
-
       return inputString
     }
 
@@ -433,6 +446,53 @@ function initStep2() {
         updateValues(inPointElement)
       })
     })
+  }
+
+  { // Listeners for preferences
+
+    document.querySelectorAll(".input-number").forEach((field) => {
+      field.addEventListener("change", () => {
+        const attr = field.getAttribute("data-phixer-pref")
+        let newValue
+
+        if (attr === "targetLCC") {
+          newValue = field.value.replace(/[^\d.]/g, '')
+          if (newValue > 1) { newValue = 1 }
+          if (newValue < 0) { newValue = 0 }
+          if (newValue.length > 4) {
+            newValue = newValue.slice(0, 4)
+          }
+        }
+
+        if (attr === "analysisSampleRate") {
+          newValue = field.value.replace(/\D/g, '')
+          if (newValue > phixer.player.sampleRate) { newValue = phixer.player.sampleRate }
+          if (newValue < 3000) { newValue = 3000 }
+        }
+
+        field.value = newValue
+        phixer.preferences[attr] = Number(newValue)
+      })
+    })
+
+    document.querySelectorAll(".input-range").forEach((slider) => {
+      slider.addEventListener("change", () => {
+        const attr = slider.getAttribute("data-phixer-pref")
+        let newValue
+
+        if (attr === "targetLCC") {
+          newValue = (slider.value / 200 + 0.5).toFixed(2)
+        }
+
+        if (attr === "analysisSampleRate") {
+          console.log(phixer.preferences[attr])
+          newValue = Math.round(slider.value * (phixer.player.sampleRate - 3000) / 100 + 3000)
+        }
+      
+        phixer.preferences[attr] = Number(newValue)
+      })
+    })
+
   }
 }
 
@@ -478,12 +538,13 @@ function dropHandler(event) {
   }
 
   document.querySelector("#upload-window").style.borderWidth = null
+  document.querySelector("#upload-window").style.cursor = "default"
   document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
 }
 
 function dragOverHandler(event) {
 
-  document.querySelector("#upload-window").setAttribute("style", "border-width: 0.5rem !important")
+  document.querySelector("#upload-window").setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
 
   // Prevent default behavior (Prevent file from being opened)
   event.preventDefault()
@@ -492,6 +553,7 @@ function dragOverHandler(event) {
 function dragLeaveHandler(event) {
 
   document.querySelector("#upload-window").style.borderWidth = null
+  document.querySelector("#upload-window").style.cursor = "default"
 
   // Prevent default behavior (Prevent file from being opened)
   event.preventDefault()

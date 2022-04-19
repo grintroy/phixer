@@ -22,7 +22,7 @@ class Phixer {
 			"duration": 5, // in seconds
 			"targetLCC": 1, // target linear corellation coefficient
 			"analysisSampleRate": 48000, // in samples per second
-			"primaryTrack": 0, // index in the takes array
+			"primaryTake": 0, // index in the takes array
 			"fadeTime": 0.02 // in seconds
 		}
 
@@ -84,6 +84,7 @@ class Phixer {
 			this.connectedTake = take
 			this.connectedTonePlayer = take.player
 			this.connectedTonePlayer.sync().start()
+			this.sampleRate = take.sampleRate
 			this.parent.loaded.dispatchEvent(new Event("loaded"))
 		}
 	}
