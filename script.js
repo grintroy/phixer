@@ -57,8 +57,7 @@ playerButtonElement.onclick = () => {
     try {
       playerButton = new PlayerButton(playerButtonElement)
     } catch (e) {
-      // console.warn("No file(s) uploaded.")
-      console.error(e)
+      console.warn("No file(s) uploaded.")
       return
     }
   }
