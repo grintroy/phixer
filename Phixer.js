@@ -17,14 +17,14 @@ class Phixer {
 
 		this.takes = []
 		this.preferences = {
-	    "inPoint": 0, // in seconds
-	    "outPoint": 15, // in seconds
-	    "duration": 15, // in seconds
-	    "targetLCC": 1, // target linear corellation coefficient
-	    "analysisSampleRate": 48000, // in samples per second
-	    "primaryTrack": 0, // index in the takes array
-	    "fadeTime": 0.02 // in seconds
-	  }
+			"inPoint": 0, // in seconds
+			"outPoint": 5, // in seconds
+			"duration": 5, // in seconds
+			"targetLCC": 1, // target linear corellation coefficient
+			"analysisSampleRate": 48000, // in samples per second
+			"primaryTrack": 0, // index in the takes array
+			"fadeTime": 0.02 // in seconds
+		}
 
 		this.context = new Tone.Context()
 		this.readFiles(this.input)
@@ -46,7 +46,9 @@ class Phixer {
 		}
 
 		initPlayer() {
-			this.player = new Tone.Player(this.audioBuffer, this.onload())
+			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
+			this.player.fadeIn = 0.03
+			this.player.fadeOut = 0.2
 			this.parent.player.connect(this.parent.takes[0])
 		}
 
@@ -67,9 +69,6 @@ class Phixer {
 
 			this.takeNum = 1
 
-			this.fadeIn = 0.3
-			this.fadeOut = 0.3
-
 		}
 
 		updatePoints() {
@@ -80,11 +79,11 @@ class Phixer {
 
 		connect(take) {
 			try {
-				this.connectedTonePlayer.disconnect()
-			} catch {	}
+				this.connectedTonePlayer.unsync()
+			} catch { }
 			this.connectedTake = take
 			this.connectedTonePlayer = take.player
-			this.connectedTonePlayer.toDestination()
+			this.connectedTonePlayer.sync().start()
 			this.parent.loaded.dispatchEvent(new Event("loaded"))
 		}
 	}
@@ -101,7 +100,7 @@ class Phixer {
 			const fileReader = new FileReader
 			fileReader.readAsArrayBuffer(file)
 			fileReader.onload = () => {
-				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size/1024/1024*100))/100} MB)`)
+				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size / 1024 / 1024 * 100)) / 100} MB)`)
 				this.context.decodeAudioData(fileReader.result).then((buffer) => {
 
 					for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
@@ -135,15 +134,15 @@ class Phixer {
 
 		let streams = []
 
-    for (let take of takes) {
-      streams.push(this.changeLength(this.resample(take)))
-    }
+		for (let take of takes) {
+			streams.push(this.changeLength(this.resample(take)))
+		}
 
 		return this.corellationValue(streams)
 
-  }
+	}
 
-  resample(take) {
+	resample(take) {
 
 		const stream = take.arrayBuffer
 
@@ -157,39 +156,39 @@ class Phixer {
 
 		return newStream
 
-  }
+	}
 
-  changeLength(stream) {
+	changeLength(stream) {
 
-    // Change length according to in and out points given in preferences and the sampling rate for analysis
-    return stream.slice(this.preferences.inPoint * this.preferences.analysisSampleRate, this.preferences.outPoint * this.preferences.analysisSampleRate)
+		// Change length according to in and out points given in preferences and the sampling rate for analysis
+		return stream.slice(this.preferences.inPoint * this.preferences.analysisSampleRate, this.preferences.outPoint * this.preferences.analysisSampleRate)
 
-  }
+	}
 
-  corellationValue(streams) {
+	corellationValue(streams) {
 
-    let length = streams[0].length
+		let length = streams[0].length
 
-    // Calculation of the sum of the products and the product of sums of squares following the original formula.
-    let numerator = new Array(length).fill(1)
-    let denominator = new Array(streams.length).fill(0)
+		// Calculation of the sum of the products and the product of sums of squares following the original formula.
+		let numerator = new Array(length).fill(1)
+		let denominator = new Array(streams.length).fill(0)
 
-    for (let i = 0; i < length; i++) {
-      for (let n = 0; n < streams.length; n++) {
-        numerator[i] *= streams[n][i]
-        denominator[n] += Math.pow(streams[n][i], 2)
-      }
-    } // check and explain
+		for (let i = 0; i < length; i++) {
+			for (let n = 0; n < streams.length; n++) {
+				numerator[i] *= streams[n][i]
+				denominator[n] += Math.pow(streams[n][i], 2)
+			}
+		} // check and explain
 
-    const corSumOfProducts = numerator.reduce(
-      (previousValue, currentValue) => previousValue + currentValue,
-      0 // initial value
-    )
-    const corProductOfSums = denominator.reduce(
-      (previousValue, currentValue) => previousValue * currentValue,
-      1 // initial value
-    )
+		const corSumOfProducts = numerator.reduce(
+			(previousValue, currentValue) => previousValue + currentValue,
+			0 // initial value
+		)
+		const corProductOfSums = denominator.reduce(
+			(previousValue, currentValue) => previousValue * currentValue,
+			1 // initial value
+		)
 
-    return (corSumOfProducts / Math.sqrt(corProductOfSums))
-  }
+		return (corSumOfProducts / Math.sqrt(corProductOfSums))
+	}
 }

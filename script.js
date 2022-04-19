@@ -7,13 +7,19 @@ const inputChanged = new Event("inputChanged")
 let playerWavElement
 
 const durationMatrix = [
-  15, 30, 45, 60
+  5, 15, 30, 45, 60
 ]
 
 class PlayerButton {
 
   constructor(element) {
-    this.player = phixer.player
+    phixer.takes.forEach(take => {
+      take.player.onstop = () => {
+        this.stop()
+      }
+    })
+
+    this.updateConnection()
     this.buttonElement = element
     this.playButton = element.querySelector("[phixer-player-button='play']")
     this.stopButton = element.querySelector("[phixer-player-button='stop']")
@@ -21,21 +27,23 @@ class PlayerButton {
 
   updateConnection() {
     this.player = phixer.player
+    this.player.connect(phixer.player.connectedTake)
   }
 
   start() {
     this.playButton.hidden = true
     this.buttonElement.style.backgroundColor = "black"
     this.stopButton.hidden = false
-
-    Tone.Transport.start(this.player.inPoint).stop(this.player.outPoint)
-
+    this.now = Tone.now()
+    Tone.Transport.start(this.now, phixer.preferences.inPoint).stop(this.now + phixer.preferences.duration)
+    this.now = undefined
   }
 
   stop() {
     this.playButton.hidden = false
     this.buttonElement.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
     this.stopButton.hidden = true
+    Tone.Transport.stop()
   }
 }
 
@@ -48,8 +56,9 @@ playerButtonElement.onclick = () => {
   if (!playerButton) {
     try {
       playerButton = new PlayerButton(playerButtonElement)
-    } catch {
-      console.warn("No file(s) uploaded.")
+    } catch (e) {
+      // console.warn("No file(s) uploaded.")
+      console.error(e)
       return
     }
   }
@@ -132,10 +141,10 @@ allBtnNext.forEach(button => {
         initButtonNextStep(id)
 
         if (id !== 1 || !inputFiles.length) {
-          initNextStep(currentStep, nextStep, id + 1)
+          initNextStep(nextStep, id + 1)
         } else {
           phixer.loaded.addEventListener("loaded", () => {
-            initNextStep(currentStep, nextStep, id + 1)
+            initNextStep(nextStep, id + 1)
           }, { once: true })
         }
       }
@@ -147,7 +156,7 @@ function initButtonNextStep(nStepId) {
   eval('initButtonStep' + nStepId + '()')
 }
 
-function initNextStep(currentStep, nextStep, nStepId) {
+function initNextStep(nextStep, nStepId) {
 
   if (!inputFiles.length) {
     nextStep = noFilesWindow
@@ -160,17 +169,18 @@ function initNextStep(currentStep, nextStep, nStepId) {
     nextStep.style.opacity = 1
     footer.style.opacity = 1
 
+    if (!inputFiles.length) {
+      console.warn("No files uploaded. Please upload files.")
+    } else {
+      eval('initStep' + nStepId + '()')
+    }
+
     nextStep.ontransitionend = (e) => {
       if (e.propertyName === "opacity") {
         spinner.hidden = true
-        if (!inputFiles.length) {
-          console.warn("No files uploaded. Please upload files.")
-        } else {
-          eval('initStep' + nStepId + '()')
-        }
       }
     }
-  }, 50);
+  }, 50)
 }
 
 function initButtonStep1() {
@@ -333,10 +343,6 @@ function initStep2() {
 
     const p5js = new p5(playerSketch, playerWavElement)
 
-    // try {
-    //   const p5js = new p5(playerSketch, playerWavElement)
-    // } catch { }
-
   }
 
   { // Listeners for player's in-out points and duration
@@ -345,10 +351,11 @@ function initStep2() {
     const inPointElement = document.querySelector("#in-point")
     const durationItems = document.querySelectorAll(".player-duration-item")
     let activeDurationItem
-    updateActiveDurationItem()
+    updateActiveDurationItem(0)
 
-    function updateActiveDurationItem() {
+    function updateActiveDurationItem(i) {
       activeDurationItem = Array.from(durationItems).find((element) => Array.from(element.classList).includes("active"))
+      document.querySelector("#take-duration p").innerHTML = durationMatrix[i] + " seconds"
     }
 
     function updateValues(element) {
@@ -423,14 +430,11 @@ function initStep2() {
         phixer.preferences.duration = durationMatrix[i]
         activeDurationItem.classList.remove("active")
         durationItems[i].classList.add("active")
-        updateActiveDurationItem()
+        updateActiveDurationItem(i)
         updateValues(inPointElement)
       })
     })
-
-
   }
-
 }
 
 // https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
@@ -455,7 +459,7 @@ function dropHandler(event) {
   console.log('File(s) dropped')
 
   // Prevent default behavior (Prevent file from being opened)
-  event.preventDefault();
+  event.preventDefault()
 
   if (event.dataTransfer.items) {
     // Use DataTransferItemList interface to access the file(s)
@@ -470,7 +474,7 @@ function dropHandler(event) {
   } else {
     // Use DataTransfer interface to access the file(s)
     for (let i = 0; i < event.dataTransfer.files.length; i++) {
-      console.log('... file[' + i + '].name = ' + event.dataTransfer.files[i].name);
+      console.log('... file[' + i + '].name = ' + event.dataTransfer.files[i].name)
     }
   }
 
@@ -483,7 +487,7 @@ function dragOverHandler(event) {
   document.querySelector("#upload-window").setAttribute("style", "border-width: 0.5rem !important")
 
   // Prevent default behavior (Prevent file from being opened)
-  event.preventDefault();
+  event.preventDefault()
 }
 
 function dragLeaveHandler(event) {
@@ -491,7 +495,7 @@ function dragLeaveHandler(event) {
   document.querySelector("#upload-window").style.borderWidth = null
 
   // Prevent default behavior (Prevent file from being opened)
-  event.preventDefault();
+  event.preventDefault()
 }
 
 function setBubble(range, bubble) {
