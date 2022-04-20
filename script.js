@@ -121,11 +121,13 @@ allRNSwitches.forEach(block => {
   range.querySelector(".text-muted").addEventListener("click", () => {
     range.hidden = true
     number.hidden = false
+    number.querySelector("input").dispatchEvent(new Event("change"))
   })
 
   number.querySelector(".text-muted").addEventListener("click", () => {
     number.hidden = true
     range.hidden = false
+    range.querySelector("input").dispatchEvent(new Event("change"))
   })
 })
 
@@ -171,6 +173,7 @@ function initNextStep(nextStep, nStepId) {
   }
 
   nextStep.hidden = false
+  footer.hidden = false
 
   setTimeout(() => {
     spinnerContainer.style.opacity = 0
@@ -467,7 +470,7 @@ function initStep2() {
         if (attr === "analysisSampleRate") {
           newValue = field.value.replace(/\D/g, '')
           if (newValue > phixer.player.sampleRate) { newValue = phixer.player.sampleRate }
-          if (newValue < 3000) { newValue = 3000 }
+          if (newValue < 3000 && newValue.length) { newValue = 3000 }
         }
 
         field.value = newValue
@@ -485,10 +488,9 @@ function initStep2() {
         }
 
         if (attr === "analysisSampleRate") {
-          console.log(phixer.preferences[attr])
           newValue = Math.round(slider.value * (phixer.player.sampleRate - 3000) / 100 + 3000)
         }
-      
+
         phixer.preferences[attr] = Number(newValue)
       })
     })
