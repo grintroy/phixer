@@ -150,13 +150,7 @@ allBtnNext.forEach(button => {
 
         initButtonNextStep(id)
 
-        if (id !== 1 || !inputFiles.length) {
-          initNextStep(nextStep, id + 1)
-        } else {
-          phixer.loaded.addEventListener("loaded", () => {
-            initNextStep(nextStep, id + 1)
-          }, { once: true })
-        }
+        initNextStep(nextStep, id + 1)
       }
     }
   })
@@ -166,32 +160,44 @@ function initButtonNextStep(nStepId) {
   eval('initButtonStep' + nStepId + '()')
 }
 
-function initNextStep(nextStep, nStepId) {
+function initNextStep(nextStep, nStepId, loaded) {
 
-  if (!inputFiles.length) {
-    nextStep = noFilesWindow
-  }
-
-  nextStep.hidden = false
-  footer.hidden = false
-
-  setTimeout(() => {
-    spinnerContainer.style.opacity = 0
-    nextStep.style.opacity = 1
-    footer.style.opacity = 1
-
+  if (!loaded) {
     if (!inputFiles.length) {
-      console.warn("No files uploaded. Please upload files.")
+      initNextStep(noFilesWindow, nStepId, true)
     } else {
-      eval('initStep' + nStepId + '()')
-    }
-
-    nextStep.ontransitionend = (e) => {
-      if (e.propertyName === "opacity") {
-        spinner.hidden = true
+      switch (nStepId) {
+        case 2:
+          phixer.loaded.addEventListener("loaded", initNextStep(nextStep, nStepId, true))
+          break;
+        case 4:
+          phixer.result.addEventListener("loaded", initNextStep(nextStep, nStepId, true))
+        default: initNextStep(nextStep, nStepId, true)
+          break;
       }
     }
-  }, 50)
+  } else {
+    nextStep.hidden = false
+    footer.hidden = false
+
+    setTimeout(() => {
+      spinnerContainer.style.opacity = 0
+      nextStep.style.opacity = 1
+      footer.style.opacity = 1
+
+      if (!inputFiles.length) {
+        console.warn("No files uploaded. Please upload files.")
+      } else {
+        eval('initStep' + nStepId + '()')
+      }
+
+      nextStep.ontransitionend = (e) => {
+        if (e.propertyName === "opacity") {
+          spinner.hidden = true
+        }
+      }
+    }, 50)
+  }
 }
 
 function initButtonStep1() {
@@ -199,7 +205,9 @@ function initButtonStep1() {
   phixer = new Phixer(inputFiles)
 }
 
-function initButtonStep2() {
+function initButtonStep2() { }
+
+function initButtonStep3() {
   console.log(phixer.preferences)
 }
 
@@ -488,7 +496,7 @@ function initStep2() {
         }
 
         if (attr === "analysisSampleRate") {
-          newValue = Math.round(slider.value * (phixer.player.sampleRate - 3000) / 100 + 3000)
+          newValue = Math.round(slider.value * (phixer.player.sampleRate - 3000) / 50000 + 0.6) * 500
         }
 
         phixer.preferences[attr] = Number(newValue)
@@ -496,6 +504,18 @@ function initStep2() {
     })
 
   }
+}
+
+function initStep3() {
+  document.querySelectorAll('#step-3 input[name="output-format"]').forEach((radio) => {
+    radio.addEventListener("click", () => {
+      phixer.preferences.outputFormat = radio.getAttribute("phixer-output-format")
+    })
+  })
+}
+
+function initStep4() {
+  
 }
 
 // https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
@@ -583,6 +603,7 @@ function setBubble(range, bubble) {
 function hideElements() {
   noFilesWindow.hidden = true
   document.querySelector("#step-2").hidden = true
+  document.querySelector("#step-3").hidden = true
   document.querySelector("#block-2-2-2").hidden = true
   document.querySelector("#block-2-3-2").hidden = true
   document.querySelector("#stop-button").hidden = true

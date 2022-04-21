@@ -100,7 +100,7 @@
                 <p>1.</p>
               </div>
               <div class="container-fluid pe-0">
-                <p>Select your files. <a href="#" class="text-muted what-is-that" data-bs-toggle="tooltip" data-bs-offset="0,3" data-bs-html="true" data-bs-placement="bottom" title="Phixer works through Web Audio API which only supports <b>.mp3</b>, <b>.wav</b> and <b>.ogg</b>.">What files?</a></p>
+                <p>Select your files. <a href="#/" class="text-muted what-is-that" data-bs-toggle="tooltip" data-bs-offset="0,3" data-bs-html="true" data-bs-placement="bottom" title="Phixer works through Web Audio API which only supports <b>.mp3</b>, <b>.wav</b> and <b>.ogg</b>.">What files?</a></p>
                 <div class="d-flex justify-content-center align-items-center bg-light border rounded-3" id="upload-window" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
                   <div id="upload-files-div">
                     <img src="upload_icon.svg" class="mx-auto d-block pb-3" id="upload-icon" alt="">
@@ -162,11 +162,11 @@
                             <p class="m-0 p-0">5 seconds</p>
                           </button>
                           <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" id="player-duration">
-                            <li><a class="player-duration-item dropdown-item active" href="#">5 seconds</a></li>
-                            <li><a class="player-duration-item dropdown-item" href="#">15 seconds</a></li>
-                            <li><a class="player-duration-item dropdown-item" href="#">30 seconds</a></li>
-                            <li><a class="player-duration-item dropdown-item" href="#">45 seconds</a></li>
-                            <li><a class="player-duration-item dropdown-item" href="#">60 seconds</a></li>
+                            <li><a class="player-duration-item dropdown-item active" href="#/">5 seconds</a></li>
+                            <li><a class="player-duration-item dropdown-item" href="#/">15 seconds</a></li>
+                            <li><a class="player-duration-item dropdown-item" href="#/">30 seconds</a></li>
+                            <li><a class="player-duration-item dropdown-item" href="#/">45 seconds</a></li>
+                            <li><a class="player-duration-item dropdown-item" href="#/">60 seconds</a></li>
                           </ul>
                         </div>
 
@@ -249,6 +249,72 @@
 
           <hr class="border mt-2 mb-0">
           <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step2">Next →</button>
+        </div>
+
+        <div class="container step-container" id="step-3" style="opacity: 0">
+          <h1 class="fw-bold">Step 3</h1>
+          <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
+
+          <section class="py-4">
+            <div class="container-fluid d-flex px-0 fs-5">
+              <div class="text-muted fw-bold">
+                <p>1.</p>
+              </div>
+              <div class="container-fluid pe-0">
+                <fieldset>
+                  <legend class="fs-5">Choose the output format.</legend>
+                  <div class="form-check">
+                    <input type="radio" class="form-check-input" phixer-output-format="none" checked id="3-1-1-radio" name="output-format">
+                    <label for="3-1-1-radio fs-5" class="form-check-label">None</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" class="form-check-input" phixer-output-format="wav" id="3-1-2-radio" name="output-format">
+                    <label for="3-1-2-radio fs-5" class="form-check-label">WAV</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" class="form-check-input" phixer-output-format="mp3" id="3-1-3-radio" name="output-format">
+                    <label for="3-1-3-radio fs-5" class="form-check-label">MP3</label>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+          </section>
+
+          <hr class="border mt-2 mb-0">
+          <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step3">Next →</button>
+        </div>
+
+        <div class="container step-container" id="step-3" style="opacity: 0">
+          <h1 class="fw-bold">Results</h1>
+          <hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0">
+
+          <section class="py-4">
+            <div class="container-fluid d-flex px-0 fs-5">
+              <div class="text-muted fw-bold">
+                <p>1.</p>
+              </div>
+              <div class="container-fluid pe-0">
+                <fieldset>
+                  <legend class="fs-5">Choose the output format.</legend>
+                  <div class="form-check">
+                    <input type="radio" class="form-check-input" phixer-output-format="none" checked id="3-1-1-radio" name="output-format">
+                    <label for="3-1-1-radio fs-5" class="form-check-label">None</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" class="form-check-input" phixer-output-format="wav" id="3-1-2-radio" name="output-format">
+                    <label for="3-1-2-radio fs-5" class="form-check-label">WAV</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" class="form-check-input" phixer-output-format="mp3" id="3-1-3-radio" name="output-format">
+                    <label for="3-1-3-radio fs-5" class="form-check-label">MP3</label>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+          </section>
+
+          <hr class="border mt-2 mb-0">
+          <button type="button" class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next" id="btn-step3">Next →</button>
         </div>
 
       </main>

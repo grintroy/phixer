@@ -339,3 +339,13 @@ input[type="range"]::-webkit-slider-thumb:focus {
   cursor: help;
   white-space: nowrap;
 }
+
+.form-check-input:checked  {
+  background-color: rgb(var(--bs-primary-rgb)) !important;
+  border-color: rgb(var(--primary-rgb-darker)) !important;
+  box-shadow: rgba(var(--primary-rgb-darker), 0.8) !important;
+}
+
+.form-check-input:active  {
+  box-shadow: rgba(var(--primary-rgb-darker), 0.8) !important;
+}

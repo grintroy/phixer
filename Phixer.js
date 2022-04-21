@@ -16,14 +16,15 @@ class Phixer {
 		Tone.start()
 
 		this.takes = []
-		this.preferences = {
+		this.preferences = { // default
 			"inPoint": 0, // in seconds
 			"outPoint": 5, // in seconds
 			"duration": 5, // in seconds
 			"targetLCC": 1, // target linear corellation coefficient
 			"analysisSampleRate": 48000, // in samples per second
 			"primaryTake": 0, // index in the takes array
-			"fadeTime": 0.02 // in seconds
+			"fadeTime": 0.02, // in seconds
+			"outputFormat": "none"
 		}
 
 		this.context = new Tone.Context()
