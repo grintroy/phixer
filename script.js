@@ -5,10 +5,7 @@ let player
 let playerSketch
 const inputChanged = new Event("inputChanged")
 let playerWavElement
-
-const durationMatrix = [
-  5, 15, 30, 45, 60
-]
+const MAXDURATION = 60
 
 class PlayerButton {
 
@@ -172,7 +169,9 @@ function initNextStep(nextStep, nStepId, loaded) {
           break;
         case 4:
           phixer.result.addEventListener("loaded", initNextStep(nextStep, nStepId, true))
-        default: initNextStep(nextStep, nStepId, true)
+          break;
+        default:
+          initNextStep(nextStep, nStepId, true)
           break;
       }
     }
@@ -205,7 +204,9 @@ function initButtonStep1() {
   phixer = new Phixer(inputFiles)
 }
 
-function initButtonStep2() { }
+function initButtonStep2() {
+
+}
 
 function initButtonStep3() {
   console.log(phixer.preferences)
@@ -373,18 +374,12 @@ function initStep2() {
 
   { // Listeners for player's in-out points and duration
 
-    const inOutPointElements = document.querySelectorAll(".in-out-points")
     const inPointElement = document.querySelector("#in-point")
-    const durationItems = document.querySelectorAll(".player-duration-item")
-    let activeDurationItem
-    updateActiveDurationItem(0)
+    const outPointElement = document.querySelector("#out-point")
+    const durationField = document.querySelector("#take-duration p span")
+    const durationBlock = document.querySelector("#take-duration")
 
-    function updateActiveDurationItem(i) {
-      activeDurationItem = Array.from(durationItems).find((element) => Array.from(element.classList).includes("active"))
-      document.querySelector("#take-duration p").innerHTML = durationMatrix[i] + " seconds"
-    }
-
-    function updateValues(element) {
+    function updateValues(element, otherElement) {
 
       // https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
 
@@ -402,38 +397,45 @@ function initStep2() {
 
       element.value = valueDisplay
 
+      let minsec = formatDisplayToMinSec(value)
+
+      const timeInSec = formatToSec(minsec.min, minsec.sec)
+
+      const attribute = element.getAttribute("phixer-in-out-points")
+      const attribute2 = otherElement.getAttribute("phixer-in-out-points")
+      phixer.preferences[attribute] = timeInSec
+
+      if ((attribute === "inPoint" && timeInSec > phixer.preferences.outPoint) || (attribute === "outPoint" && timeInSec < phixer.preferences.inPoint) || Math.abs(phixer.preferences[attribute] - phixer.preferences[attribute2]) > 60) {
+        phixer.preferences.duration = "—"
+        durationBlock.classList.remove("bg-light")
+        durationBlock.classList.remove("text-muted")
+        durationBlock.classList.add("bg-danger")
+        durationBlock.classList.add("text-light")
+      } else {
+        phixer.updateDuration()
+        durationBlock.classList.add("bg-light")
+        durationBlock.classList.add("text-muted")
+        durationBlock.classList.remove("bg-danger")
+        durationBlock.classList.remove("text-light")
+      }
+      
+      phixer.player.updatePoints()
+
+      durationField.innerHTML = phixer.preferences.duration
+
+      playerWavElement.dispatchEvent(inputChanged)
+
+    }
+
+    function formatToSec(min, sec) { // Convert time from mm:ss to seconds
+      return min * 60 + sec 
+    }
+
+    function formatDisplayToMinSec(value) { // Convert display format to minutes and seconds
       let min = Math.floor(value / 100)
       let sec = value - min * 100
 
-      const timeInSec = min * 60 + sec
-
-      const attribute = element.getAttribute("phixer-in-out-points")
-      const duration = phixer.preferences.duration
-
-      let target
-      let newValue
-
-      if (attribute === "in") {
-        phixer.preferences.inPoint = timeInSec
-        min = Math.floor((timeInSec + duration) / 60)
-        sec = timeInSec + duration - min * 60
-        target = document.querySelector("#out-point")
-      } else if (attribute === "out") {
-        phixer.preferences.outPoint = timeInSec
-        min = Math.floor((timeInSec - duration) / 60)
-        sec = timeInSec - duration - min * 60
-        target = document.querySelector("#in-point")
-      }
-
-      newValue = min * 100 + sec
-
-      if (formatString(target.value) != newValue) {
-        target.value = newValue
-        target.dispatchEvent(new Event("input"))
-        phixer.player.updatePoints()
-        playerWavElement.dispatchEvent(inputChanged)
-      }
-
+      return {"min": min, "sec": sec}
     }
 
     function formatString(inputString) { // Delete any characters but numbers and remove leading zeros
@@ -444,19 +446,8 @@ function initStep2() {
       return inputString
     }
 
-    inOutPointElements.forEach((element) => {
-      element.addEventListener("input", () => updateValues(element))
-    })
-
-    durationItems.forEach((item, i) => {
-      item.addEventListener("click", () => {
-        phixer.preferences.duration = durationMatrix[i]
-        activeDurationItem.classList.remove("active")
-        durationItems[i].classList.add("active")
-        updateActiveDurationItem(i)
-        updateValues(inPointElement)
-      })
-    })
+    inPointElement.addEventListener("input", () => updateValues(inPointElement, outPointElement))
+    outPointElement.addEventListener("input", () => updateValues(outPointElement, inPointElement))
   }
 
   { // Listeners for preferences
@@ -604,6 +595,7 @@ function hideElements() {
   noFilesWindow.hidden = true
   document.querySelector("#step-2").hidden = true
   document.querySelector("#step-3").hidden = true
+  document.querySelector("#step-4").hidden = true
   document.querySelector("#block-2-2-2").hidden = true
   document.querySelector("#block-2-3-2").hidden = true
   document.querySelector("#stop-button").hidden = true

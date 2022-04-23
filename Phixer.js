@@ -35,6 +35,10 @@ class Phixer {
 		this.player = new Phixer.Player(this)
 	}
 
+	updateDuration() {
+		this.preferences.duration = this.preferences.outPoint - this.preferences.inPoint
+	}
+
 	static Take = class {
 		constructor(parent, name, buffer, duration, sampleRate) {
 			this.name = name
