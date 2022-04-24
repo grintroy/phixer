@@ -9,6 +9,16 @@ const MAXDURATION = 60
 
 class PlayerButton {
 	constructor(element) {
+		this.element = element
+		element.onclick = () => {
+			const state = Tone.Transport.state
+			if (state === "stopped") {
+				this.start()
+			} else if (state === "started") {
+				this.stop()
+			}
+		}
+
 		phixer.takes.forEach((take) => {
 			take.player.onstop = () => {
 				this.stop()
@@ -42,29 +52,6 @@ class PlayerButton {
 		this.buttonElement.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
 		this.stopButton.hidden = true
 		Tone.Transport.stop()
-	}
-}
-
-const playerButtonElement = document.getElementById("player-button")
-
-let playerButton
-
-playerButtonElement.onclick = () => {
-	if (!playerButton) {
-		try {
-			playerButton = new PlayerButton(playerButtonElement)
-		} catch (e) {
-			console.warn("No file(s) uploaded.")
-			return
-		}
-	}
-
-	const state = Tone.Transport.state
-
-	if (state === "stopped") {
-		playerButton.start()
-	} else if (state === "started") {
-		playerButton.stop()
 	}
 }
 
@@ -103,15 +90,18 @@ const allBtnNext = document.querySelectorAll(".button-next")
 const uploadFilesDiv = document.querySelector("#upload-files-div")
 const uploadFilesInput = uploadFilesDiv.querySelector("#upload-files-input")
 const uploadFilesLink = uploadFilesDiv.querySelector("a")
+const uploadWindow = document.querySelector("#upload-window")
 
 const buttonStep1 = document.querySelector("#btn-step1")
 
 const spinner = document.querySelector("#spinner")
 const spinnerContainer = document.querySelector("#spinner-container")
 const footer = document.querySelector("#footer")
-const noFilesWindow = document.querySelector("#no-files")
+const errorWindow = document.querySelector("#error")
+const resultsWindow = document.querySelector("#results")
 
 hideElements()
+initStep1()
 
 allRNSwitches.forEach((block) => {
 	const range = block.querySelector(".switch-range")
@@ -146,7 +136,7 @@ allBtnNext.forEach((button) => {
 				currentStep.hidden = true
 				footer.hidden = true
 
-				initButtonNextStep(id)
+				initButtonStep(id)
 
 				initNextStep(nextStep, id + 1)
 			}
@@ -154,69 +144,144 @@ allBtnNext.forEach((button) => {
 	})
 })
 
-function initButtonNextStep(nStepId) {
+function initButtonStep(nStepId) {
 	eval("initButtonStep" + nStepId + "()")
 }
 
-function initNextStep(nextStep, nStepId, loaded) {
-	if (!loaded) {
-		if (!inputFiles.length) {
-			initNextStep(noFilesWindow, nStepId, true)
-		} else {
-			switch (nStepId) {
-				case 2:
-					phixer.loaded.addEventListener(
-						"loaded",
-						initNextStep(nextStep, nStepId, true)
-					)
-					break
-				case 4:
-					phixer.result.addEventListener(
-						"loaded",
-						initNextStep(nextStep, nStepId, true)
-					)
-					break
-				default:
-					initNextStep(nextStep, nStepId, true)
-					break
+function initNextStep(nextStep, nStepId) {
+	switch (nStepId) {
+		case 2:
+			phixer = new Phixer(inputFiles)
+			phixer
+				.checkLoaded()
+				.then(() => initNextStepLoaded(nextStep, nStepId))
+				.catch(() => initNextStepLoaded(errorWindow, 0))
+			break
+		case 4:
+			phixer
+				.checkPreferences()
+				.then(() => {
+					phixer
+						.phix()
+						.then(() => initNextStepLoaded(resultsWindow, 4))
+						.catch(() => initNextStepLoaded(errorWindow, 0))
+				})
+				.catch(() => initNextStepLoaded(errorWindow, 0))
+			break
+		default:
+			initNextStepLoaded(nextStep, nStepId)
+			break
+	}
+}
+
+function initNextStepLoaded(nextStep, nStepId) {
+	nextStep.hidden = false
+	footer.hidden = false
+
+	setTimeout(() => {
+		spinnerContainer.style.opacity = 0
+		nextStep.style.opacity = 1
+		footer.style.opacity = 1
+
+		eval("initStep" + nStepId + "()")
+
+		nextStep.ontransitionend = (e) => {
+			if (e.propertyName === "opacity") {
+				spinner.hidden = true
 			}
 		}
-	} else {
-		nextStep.hidden = false
-		footer.hidden = false
-
-		setTimeout(() => {
-			spinnerContainer.style.opacity = 0
-			nextStep.style.opacity = 1
-			footer.style.opacity = 1
-
-			if (!inputFiles.length) {
-				console.warn("No files uploaded. Please upload files.")
-			} else {
-				eval("initStep" + nStepId + "()")
-			}
-
-			nextStep.ontransitionend = (e) => {
-				if (e.propertyName === "opacity") {
-					spinner.hidden = true
-				}
-			}
-		}, 50)
-	}
+	}, 50)
 }
 
 function initButtonStep1() {
 	playerWavElement = document.querySelector("#player")
-	phixer = new Phixer(inputFiles)
 }
 
 function initButtonStep2() {}
 
 function initButtonStep3() {
-	console.log(phixer.preferences)
+	console.log("Current preferences:", phixer.preferences)
+}
+
+function initStep0() {
+	errorWindow.querySelector("code").innerHTML = phixer.error
+}
+
+function initStep1() {
+	uploadWindow.ondrop = (e) => dropHandler(e)
+	uploadWindow.ondragover = (e) => dragOverHandler(e)
+	uploadWindow.ondragleave = (e) => dragLeaveHandler(e)
+
+	// https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
+	// https://stackoverflow.com/questions/11406605/how-to-make-a-link-act-as-a-file-input
+
+	uploadFilesLink.addEventListener("click", (e) => {
+		e.preventDefault()
+		uploadFilesInput.dispatchEvent(new Event("click"))
+	})
+
+	uploadFilesInput.addEventListener("change", (e) => {
+		for (const file of e.target.files) {
+			inputFiles.push(file)
+			console.log("File(s) uploaded: " + file.name)
+		}
+		document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
+	})
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
+
+	function dropHandler(event) {
+		console.log("File(s) dropped")
+
+		// Prevent default behavior (Prevent file from being opened)
+		event.preventDefault()
+
+		if (event.dataTransfer.items) {
+			// Use DataTransferItemList interface to access the file(s)
+			for (let i = 0; i < event.dataTransfer.items.length; i++) {
+				// If dropped items aren't files, reject them
+				if (event.dataTransfer.items[i].kind === "file") {
+					const tmpFile = event.dataTransfer.items[i].getAsFile()
+					inputFiles.push(tmpFile)
+					console.log("... file[" + i + "].name = " + tmpFile.name)
+				}
+			}
+		} else {
+			// Use DataTransfer interface to access the file(s)
+			for (let i = 0; i < event.dataTransfer.files.length; i++) {
+				console.log(
+					"... file[" + i + "].name = " + event.dataTransfer.files[i].name
+				)
+			}
+		}
+
+		uploadWindow.style.borderWidth = null
+		uploadWindow.style.cursor = "default"
+		document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
+	}
+
+	function dragOverHandler(event) {
+		document
+			.querySelector("#upload-window")
+			.setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
+
+		// Prevent default behavior (Prevent file from being opened)
+		event.preventDefault()
+	}
+
+	function dragLeaveHandler(event) {
+		uploadWindow.style.borderWidth = null
+		uploadWindow.style.cursor = "default"
+
+		// Prevent default behavior (Prevent file from being opened)
+		event.preventDefault()
+	}
 }
 
 function initStep2() {
+	const playerButton = new PlayerButton(
+		document.getElementById("player-button")
+	)
 	document.getElementById("2-3-2-number").placeholder = phixer.player.sampleRate
 
 	allRanges.forEach((wrap) => {
@@ -232,6 +297,22 @@ function initStep2() {
 		})
 		setBubble(range, bubble)
 	})
+
+	function setBubble(range, bubble) {
+		const halfWidth = bubble.getBoundingClientRect().width / 2 // in px
+
+		let val = range.value
+
+		for (const levels of Object.keys(rangesTextMatrix[range.name])) {
+			if (Number(val) >= Number(levels)) {
+				bubble.innerHTML = rangesTextMatrix[range.name][levels]
+			}
+		}
+
+		bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${
+			(val / 50 - 1) * 1
+		}rem - ${halfWidth}px)`
+	}
 
 	{
 		// Takes dropdown initialization
@@ -471,6 +552,8 @@ function initStep2() {
 		)
 	}
 
+	phixer.preferences.analysisSampleRate = phixer.player.sampleRate
+
 	{
 		// Listeners for preferences
 
@@ -543,95 +626,11 @@ function initStep3() {
 
 function initStep4() {}
 
-// https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
-// https://stackoverflow.com/questions/11406605/how-to-make-a-link-act-as-a-file-input
-
-uploadFilesLink.addEventListener("click", (e) => {
-	e.preventDefault()
-	uploadFilesInput.dispatchEvent(new Event("click"))
-})
-
-uploadFilesInput.addEventListener("change", (e) => {
-	for (const file of e.target.files) {
-		inputFiles.push(file)
-		console.log("File(s) uploaded: " + file.name)
-	}
-	document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
-})
-
-// https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
-
-function dropHandler(event) {
-	console.log("File(s) dropped")
-
-	// Prevent default behavior (Prevent file from being opened)
-	event.preventDefault()
-
-	if (event.dataTransfer.items) {
-		// Use DataTransferItemList interface to access the file(s)
-		for (let i = 0; i < event.dataTransfer.items.length; i++) {
-			// If dropped items aren't files, reject them
-			if (event.dataTransfer.items[i].kind === "file") {
-				const tmpFile = event.dataTransfer.items[i].getAsFile()
-				inputFiles.push(tmpFile)
-				console.log("... file[" + i + "].name = " + tmpFile.name)
-			}
-		}
-	} else {
-		// Use DataTransfer interface to access the file(s)
-		for (let i = 0; i < event.dataTransfer.files.length; i++) {
-			console.log(
-				"... file[" + i + "].name = " + event.dataTransfer.files[i].name
-			)
-		}
-	}
-
-	document.querySelector("#upload-window").style.borderWidth = null
-	document.querySelector("#upload-window").style.cursor = "default"
-	document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
-}
-
-function dragOverHandler(event) {
-	document
-		.querySelector("#upload-window")
-		.setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
-
-	// Prevent default behavior (Prevent file from being opened)
-	event.preventDefault()
-}
-
-function dragLeaveHandler(event) {
-	document.querySelector("#upload-window").style.borderWidth = null
-	document.querySelector("#upload-window").style.cursor = "default"
-
-	// Prevent default behavior (Prevent file from being opened)
-	event.preventDefault()
-}
-
-function setBubble(range, bubble) {
-	const halfWidth = bubble.getBoundingClientRect().width / 2 // in px
-
-	let val = range.value
-
-	for (const levels of Object.keys(rangesTextMatrix[range.name])) {
-		if (Number(val) >= Number(levels)) {
-			bubble.innerHTML = rangesTextMatrix[range.name][levels]
-		}
-	}
-
-	const min = range.min
-	const max = range.max
-
-	bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${
-		(val / 50 - 1) * 1
-	}rem - ${halfWidth}px)`
-}
-
 function hideElements() {
-	noFilesWindow.hidden = true
+	errorWindow.hidden = true
+	resultsWindow.hidden = true
 	document.querySelector("#step-2").hidden = true
 	document.querySelector("#step-3").hidden = true
-	document.querySelector("#step-4").hidden = true
 	document.querySelector("#block-2-2-2").hidden = true
 	document.querySelector("#block-2-3-2").hidden = true
 	document.querySelector("#stop-button").hidden = true
