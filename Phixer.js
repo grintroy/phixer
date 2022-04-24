@@ -1,7 +1,5 @@
 class Phixer {
-
 	constructor(input) {
-
 		this.input = input
 
 		console.log("Phixer is initialized. Files: " + input.length)
@@ -16,15 +14,16 @@ class Phixer {
 		Tone.start()
 
 		this.takes = []
-		this.preferences = { // default
-			"inPoint": 0, // in seconds
-			"outPoint": 5, // in seconds
-			"duration": 5, // in seconds
-			"targetLCC": 1, // target linear corellation coefficient
-			"analysisSampleRate": 48000, // in samples per second
-			"primaryTake": 0, // index in the takes array
-			"fadeTime": 0.02, // in seconds
-			"outputFormat": "none"
+		this.preferences = {
+			// default
+			inPoint: 0, // in seconds
+			outPoint: 5, // in seconds
+			duration: 5, // in seconds
+			targetLCC: 1, // target linear corellation coefficient
+			analysisSampleRate: 48000, // in samples per second
+			primaryTake: 0, // index in the takes array
+			fadeTime: 0.02, // in seconds
+			outputFormat: "none"
 		}
 
 		this.context = new Tone.Context()
@@ -36,7 +35,8 @@ class Phixer {
 	}
 
 	updateDuration() {
-		this.preferences.duration = this.preferences.outPoint - this.preferences.inPoint
+		this.preferences.duration =
+			this.preferences.outPoint - this.preferences.inPoint
 	}
 
 	static Take = class {
@@ -47,11 +47,18 @@ class Phixer {
 			this.sampleRate = sampleRate
 			this.parent = parent
 
-			this.audioBuffer = parent.convertToAudioBuffer(buffer, duration, sampleRate)
+			this.audioBuffer = parent.convertToAudioBuffer(
+				buffer,
+				duration,
+				sampleRate
+			)
 		}
 
 		initPlayer() {
-			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
+			this.player = new Tone.Player(
+				this.audioBuffer,
+				this.onload()
+			).toDestination()
 			this.player.fadeIn = 0.03
 			this.player.fadeOut = 0.2
 			this.parent.player.connect(this.parent.takes[0])
@@ -65,7 +72,6 @@ class Phixer {
 
 	static Player = class {
 		constructor(parent) {
-
 			this.parent = parent
 
 			this.button = document.getElementById("player-button")
@@ -73,7 +79,6 @@ class Phixer {
 			this.updatePoints()
 
 			this.takeNum = 1
-
 		}
 
 		updatePoints() {
@@ -85,7 +90,7 @@ class Phixer {
 		connect(take) {
 			try {
 				this.connectedTonePlayer.unsync()
-			} catch { }
+			} catch {}
 			this.connectedTake = take
 			this.connectedTonePlayer = take.player
 			this.connectedTonePlayer.sync().start()
@@ -95,7 +100,6 @@ class Phixer {
 	}
 
 	readFiles(files) {
-
 		let newTake
 
 		const nameNumbersSF = 2 // significant figures for the take name index
@@ -103,19 +107,30 @@ class Phixer {
 		// https://codepen.io/dmack/pen/VLxpyv
 
 		for (let file of files) {
-			const fileReader = new FileReader
+			const fileReader = new FileReader()
 			fileReader.readAsArrayBuffer(file)
 			fileReader.onload = () => {
-				console.log(`Read from the input. Filename: '${file.name}' (${(Math.floor(file.size / 1024 / 1024 * 100)) / 100} MB)`)
+				console.log(
+					`Read from the input. Filename: '${file.name}' (${
+						Math.floor((file.size / 1024 / 1024) * 100) / 100
+					} MB)`
+				)
 				this.context.decodeAudioData(fileReader.result).then((buffer) => {
-
 					for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-
 						// The input file can be multichannel but it needs to include only one "." symbol
 
-						const filename = file.name.split(".")[0] + "_" + (channel + 1).toString().padStart(nameNumbersSF, "0")
+						const filename =
+							file.name.split(".")[0] +
+							"_" +
+							(channel + 1).toString().padStart(nameNumbersSF, "0")
 
-						newTake = new Phixer.Take(this, filename, buffer.getChannelData(channel), buffer.duration, buffer.sampleRate)
+						newTake = new Phixer.Take(
+							this,
+							filename,
+							buffer.getChannelData(channel),
+							buffer.duration,
+							buffer.sampleRate
+						)
 
 						this.takes.push(newTake)
 
@@ -127,17 +142,18 @@ class Phixer {
 	}
 
 	convertToAudioBuffer(arrayBuffer, duration, sampleRate) {
-
-		let audioBuffer = this.context.createBuffer(1, duration * sampleRate, sampleRate)
+		let audioBuffer = this.context.createBuffer(
+			1,
+			duration * sampleRate,
+			sampleRate
+		)
 		for (var i = 0; i < arrayBuffer.length; i++) {
 			audioBuffer.getChannelData(0)[i] = arrayBuffer[i]
 		}
 		return audioBuffer
-
 	}
 
 	analysePhase(takes) {
-
 		let streams = []
 
 		for (let take of takes) {
@@ -145,34 +161,36 @@ class Phixer {
 		}
 
 		return this.corellationValue(streams)
-
 	}
 
 	resample(take) {
-
 		const stream = take.arrayBuffer
 
 		let newStream = []
 
-		const resampleCoef = 1 / (1 / take.sampleRate * this.preferences.analysisSampleRate)
+		const resampleCoef =
+			1 / ((1 / take.sampleRate) * this.preferences.analysisSampleRate)
 
-		for (let sampleCounter = 0; sampleCounter < stream.length / resampleCoef; sampleCounter++) {
+		for (
+			let sampleCounter = 0;
+			sampleCounter < stream.length / resampleCoef;
+			sampleCounter++
+		) {
 			newStream.push(stream[Math.floor(sampleCounter * resampleCoef)])
 		}
 
 		return newStream
-
 	}
 
 	changeLength(stream) {
-
 		// Change length according to in and out points given in preferences and the sampling rate for analysis
-		return stream.slice(this.preferences.inPoint * this.preferences.analysisSampleRate, this.preferences.outPoint * this.preferences.analysisSampleRate)
-
+		return stream.slice(
+			this.preferences.inPoint * this.preferences.analysisSampleRate,
+			this.preferences.outPoint * this.preferences.analysisSampleRate
+		)
 	}
 
 	corellationValue(streams) {
-
 		let length = streams[0].length
 
 		// Calculation of the sum of the products and the product of sums of squares following the original formula.
@@ -195,6 +213,6 @@ class Phixer {
 			1 // initial value
 		)
 
-		return (corSumOfProducts / Math.sqrt(corProductOfSums))
+		return corSumOfProducts / Math.sqrt(corProductOfSums)
 	}
 }
