@@ -9,7 +9,17 @@ let playerWavElement
 let playerWavProgress
 let playheadController
 let playerButton
+let renderPlayer
+const SAMPLERATERANGE = {
+	min: 3000,
+	max: undefined
+}
 const MAXDURATION = 60
+
+// https://gist.github.com/xposedbones/75ebaef3c10060a3ee3b246166caab56
+Number.prototype.map = function (in_min, in_max, out_min, out_max) {
+	return ((this - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
+}
 
 class PlayerButton {
 	constructor(element) {
@@ -208,7 +218,9 @@ function initButtonStep1() {
 	playerWavProgress = document.querySelector("#player-progress")
 }
 
-function initButtonStep2() {}
+function initButtonStep2() {
+	window.removeEventListener("resize", renderPlayer)
+}
 
 function initButtonStep3() {
 	console.log("Current preferences:", phixer.preferences)
@@ -365,15 +377,8 @@ function initStep2() {
 
 				// Schedule re-render when the window is resized
 
-				window.addEventListener("resize", () => {
-					drawWaveform()
-					progressWavCanvasInit()
-				})
-
-				playerWavElement.addEventListener("inputChanged", () => {
-					drawWaveform()
-					progressWavCanvasInit()
-				})
+				window.addEventListener("resize", () => renderPlayer)
+				playerWavElement.addEventListener("inputChanged", () => renderPlayer)
 			}
 
 			p.draw = () => {
@@ -381,6 +386,11 @@ function initStep2() {
 				if (Tone.Transport.state === "started") {
 					playerButton.updatePlayheadController()
 				}
+			}
+
+			renderPlayer = function () {
+				drawWaveform()
+				progressWavCanvasInit()
 			}
 
 			function drawWaveform() {
@@ -635,8 +645,8 @@ function initStep2() {
 					if (newValue > phixer.player.sampleRate) {
 						newValue = phixer.player.sampleRate
 					}
-					if (newValue < 3000 && newValue.length) {
-						newValue = 3000
+					if (newValue < SAMPLERATERANGE.min && newValue.length) {
+						newValue = SAMPLERATERANGE.min
 					}
 				}
 
@@ -655,7 +665,8 @@ function initStep2() {
 				}
 
 				if (attr === "analysisSampleRate") {
-					newValue = Math.round((slider.value * (phixer.player.sampleRate - 3000)) / 50000 + 0.6) * 500
+					newValue =
+						Math.round(Number(slider.value).map(0, 100, SAMPLERATERANGE.min, phixer.player.sampleRate) / 100) * 100
 				}
 
 				phixer.preferences[attr] = Number(newValue)
