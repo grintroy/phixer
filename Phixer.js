@@ -127,7 +127,7 @@ class Phixer {
 				this.onload()
 			).toDestination()
 			this.player.fadeIn = 0.03
-			this.player.fadeOut = 0.2
+			this.player.fadeOut = 0.07
 			this.parent.player.connect(this.parent.takes[0])
 		}
 

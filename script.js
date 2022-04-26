@@ -4,7 +4,11 @@ let phixer
 let player
 let playerSketch
 const inputChanged = new Event("inputChanged")
+const waveformLookahead = 500 // in samples
 let playerWavElement
+let playerWavProgress
+let playheadController
+let playerButton
 const MAXDURATION = 60
 
 class PlayerButton {
@@ -12,7 +16,7 @@ class PlayerButton {
 		this.element = element
 		element.onclick = () => {
 			const state = Tone.Transport.state
-			if (state === "stopped") {
+			if (state === "stopped" && phixer.preferences.duration > 0) {
 				this.start()
 			} else if (state === "started") {
 				this.stop()
@@ -31,6 +35,13 @@ class PlayerButton {
 		this.stopButton = element.querySelector("[phixer-player-button='stop']")
 	}
 
+	updatePlayheadController() {
+		const secPos = Tone.now() - this.now
+		const value = secPos / phixer.preferences.duration
+
+		playheadController.clipPath = `inset(0 ${100 * (1 - value)}% 0 0)`
+	}
+
 	updateConnection() {
 		this.player = phixer.player
 		this.player.connect(phixer.player.connectedTake)
@@ -40,14 +51,15 @@ class PlayerButton {
 		this.playButton.hidden = true
 		this.buttonElement.style.backgroundColor = "black"
 		this.stopButton.hidden = false
+		this.durationCoef = 1 / phixer.preferences.duration
 		this.now = Tone.now()
-		Tone.Transport.start(this.now, phixer.preferences.inPoint).stop(
-			this.now + phixer.preferences.duration
-		)
-		this.now = undefined
+		Tone.Transport.start(this.now, phixer.preferences.inPoint).stop(this.now + phixer.preferences.duration)
+		playheadController.opacity = 1
+		playerWavProgress.style.borderWidth = 5
 	}
 
 	stop() {
+		playheadController.opacity = 0
 		this.playButton.hidden = false
 		this.buttonElement.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
 		this.stopButton.hidden = true
@@ -74,9 +86,7 @@ const rangesTextMatrix = {
 
 // Bootstrap Tooltips component
 
-let tooltipTriggerList = [].slice.call(
-	document.querySelectorAll('[data-bs-toggle="tooltip"]')
-)
+let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 let tooltipList = tooltipTriggerList.map((tooltipTriggerEl) => {
 	return new bootstrap.Tooltip(tooltipTriggerEl, {
 		boundary: document.body
@@ -195,6 +205,7 @@ function initNextStepLoaded(nextStep, nStepId) {
 
 function initButtonStep1() {
 	playerWavElement = document.querySelector("#player")
+	playerWavProgress = document.querySelector("#player-progress")
 }
 
 function initButtonStep2() {}
@@ -249,9 +260,7 @@ function initStep1() {
 		} else {
 			// Use DataTransfer interface to access the file(s)
 			for (let i = 0; i < event.dataTransfer.files.length; i++) {
-				console.log(
-					"... file[" + i + "].name = " + event.dataTransfer.files[i].name
-				)
+				console.log("... file[" + i + "].name = " + event.dataTransfer.files[i].name)
 			}
 		}
 
@@ -261,9 +270,7 @@ function initStep1() {
 	}
 
 	function dragOverHandler(event) {
-		document
-			.querySelector("#upload-window")
-			.setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
+		document.querySelector("#upload-window").setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
 
 		// Prevent default behavior (Prevent file from being opened)
 		event.preventDefault()
@@ -279,9 +286,7 @@ function initStep1() {
 }
 
 function initStep2() {
-	const playerButton = new PlayerButton(
-		document.getElementById("player-button")
-	)
+	playerButton = new PlayerButton(document.getElementById("player-button"))
 	document.getElementById("2-3-2-number").placeholder = phixer.player.sampleRate
 
 	allRanges.forEach((wrap) => {
@@ -309,9 +314,7 @@ function initStep2() {
 			}
 		}
 
-		bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${
-			(val / 50 - 1) * 1
-		}rem - ${halfWidth}px)`
+		bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${(val / 50 - 1) * 1}rem - ${halfWidth}px)`
 	}
 
 	{
@@ -355,7 +358,7 @@ function initStep2() {
 	{
 		// p5 waveform
 
-		playerSketch = (p) => {
+		mainWaveform = (p) => {
 			p.setup = () => {
 				p.noCanvas()
 				drawWaveform()
@@ -364,11 +367,20 @@ function initStep2() {
 
 				window.addEventListener("resize", () => {
 					drawWaveform()
+					progressWavCanvasInit()
 				})
 
 				playerWavElement.addEventListener("inputChanged", () => {
 					drawWaveform()
+					progressWavCanvasInit()
 				})
+			}
+
+			p.draw = () => {
+				p.loop()
+				if (Tone.Transport.state === "started") {
+					playerButton.updatePlayheadController()
+				}
 			}
 
 			function drawWaveform() {
@@ -380,7 +392,6 @@ function initStep2() {
 				p.createCanvas(elWidth, elHeight)
 
 				const bandWidth = 6 // in pixels
-				const roundCorners = 4 // in px
 				p.stroke(204, 204, 204)
 				p.strokeWeight(bandWidth / 2)
 				const data = phixer.player.connectedTake.arrayBuffer
@@ -393,7 +404,7 @@ function initStep2() {
 				const outpointSamples = outpoint * sampleRate
 				const durationSamples = outpointSamples - inpointSamples
 
-				const yMargin = 6 // in px, distance from the loudest point to the border of the canvas
+				const yMargin = 10 // in px, distance from the loudest point to the border of the canvas
 				const yMarginCoef = (elHeight - yMargin * 2) / elHeight
 
 				const newData = data.slice(inpointSamples, outpointSamples)
@@ -402,31 +413,42 @@ function initStep2() {
 
 				let emptySpacePointX
 				let emptySpaceLinesArray = []
+				let lineHeightsArray = []
 				const emptySpaceHeight = elHeight - yMargin * 2
 
-				for (
-					let i = 0;
-					i < durationSamples;
-					i += bandWidth * pixelToSampleRatio
-				) {
+				for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
 					const pixelX = i / pixelToSampleRatio
 
 					if (i < newData.length) {
-						const lineHeight =
-							Math.abs(newData[Math.floor(i)]) * yMarginCoef * elHeight
-						const margin = (elHeight - lineHeight) / 2
-						p.line(pixelX, margin, pixelX, margin + lineHeight)
+						const valSum = newData
+							.slice(Math.floor(i), Math.floor(i + waveformLookahead))
+							.reduce((prevVal, curVal) => Math.abs(prevVal) + Math.abs(curVal), 0)
+						const meanVal = valSum / waveformLookahead
+						const lineHeight = meanVal * yMarginCoef * elHeight
+						lineHeightsArray.push(lineHeight)
 					} else if (!emptySpacePointX) {
 						emptySpacePointX = pixelX
 						break
 					}
 				}
 
-				for (
-					let i = -emptySpaceHeight + emptySpacePointX;
-					i < elWidth;
-					i += bandWidth * 2
-				) {
+				// Normalize the displayed signal
+
+				const max = Math.max.apply(null, lineHeightsArray)
+				const normalizationCoef = (yMarginCoef * elHeight) / max
+				lineHeightsArray.forEach((line, i) => {
+					lineHeightsArray[i] *= normalizationCoef
+				})
+
+				for (let i = 0, j = 0; i < newData.length; i += bandWidth * pixelToSampleRatio, j++) {
+					const pixelX = i / pixelToSampleRatio
+					const margin = (elHeight - lineHeightsArray[j]) / 2
+					p.line(pixelX, margin, pixelX, margin + lineHeightsArray[j])
+				}
+
+				// Create a box indicating the end of the take
+
+				for (let i = -emptySpaceHeight + emptySpacePointX; i < elWidth; i += bandWidth * 2) {
 					emptySpaceLinesArray.push({
 						x1: i,
 						y1: yMargin + emptySpaceHeight,
@@ -446,17 +468,56 @@ function initStep2() {
 					})
 
 					p.fill(0, 0)
-					p.rect(
-						emptySpacePointX,
-						yMargin,
-						elWidth - emptySpacePointX + bandWidth / 2,
-						elHeight - yMargin * 2
-					)
+					p.rect(emptySpacePointX, yMargin, elWidth - emptySpacePointX + bandWidth / 2, elHeight - yMargin * 2)
 				}
 			}
 		}
 
-		const p5js = new p5(playerSketch, playerWavElement)
+		const p5js1 = new p5(mainWaveform, playerWavElement)
+
+		const parentElement = playerWavProgress
+		const oldCanvasElement = document.querySelector(".p5Canvas")
+		progressWavCanvasInit()
+		playheadController = parentElement.style
+
+		function progressWavCanvasInit() {
+			document.querySelectorAll(".dup-canvas").forEach((e) => {
+				e.remove()
+			})
+			const newCanvasCopy = cloneCanvas(oldCanvasElement)
+			const newCanvasElement = parentElement.insertBefore(
+				newCanvasCopy,
+				parentElement.querySelector("#player-progress-bg")
+			)
+			newCanvasElement.style.cssText = oldCanvasElement.style.cssText
+			newCanvasElement.style.position = "absolute"
+			newCanvasElement.classList.add("dup-canvas")
+		}
+
+		function cloneCanvas(oldCanvas) {
+			// https://stackoverflow.com/questions/3318565/any-way-to-clone-html5-canvas-element-with-its-content
+			// https://stackoverflow.com/questions/45706829/change-color-image-in-canvas
+
+			// create a new canvas
+			var newCanvas = document.createElement("canvas")
+			var context = newCanvas.getContext("2d")
+
+			// set dimensions
+			newCanvas.width = oldCanvas.width
+			newCanvas.height = oldCanvas.height
+
+			// apply the old canvas to the new one
+			context.drawImage(oldCanvas, 0, 0)
+
+			context.globalCompositeOperation = "source-in"
+
+			const color = getComputedStyle(document.documentElement).getPropertyValue("--bs-primary-rgb") // https://davidwalsh.name/css-variables-javascript
+			context.fillStyle = `rgb(${color})`
+			context.fillRect(0, 0, newCanvas.width, newCanvas.height)
+
+			// return the new canvas
+			return newCanvas
+		}
 	}
 
 	{
@@ -468,6 +529,8 @@ function initStep2() {
 		const durationBlock = document.querySelector("#take-duration")
 
 		function updateValues(element, otherElement) {
+			playerButton.stop()
+
 			// https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
 
 			let value = element.value
@@ -479,9 +542,7 @@ function initStep2() {
 			}
 
 			value =
-				"0".repeat(4 - value.length) +
-				value.slice(0, value.length - 2) +
-				value.slice(value.length - 2, value.length)
+				"0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
 
 			const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
 
@@ -498,9 +559,7 @@ function initStep2() {
 			if (
 				(attribute === "inPoint" && timeInSec > phixer.preferences.outPoint) ||
 				(attribute === "outPoint" && timeInSec < phixer.preferences.inPoint) ||
-				Math.abs(
-					phixer.preferences[attribute] - phixer.preferences[attribute2]
-				) > 60
+				Math.abs(phixer.preferences[attribute] - phixer.preferences[attribute2]) > 60
 			) {
 				phixer.preferences.duration = "—"
 				durationBlock.classList.remove("bg-light")
@@ -544,12 +603,8 @@ function initStep2() {
 			return inputString
 		}
 
-		inPointElement.addEventListener("input", () =>
-			updateValues(inPointElement, outPointElement)
-		)
-		outPointElement.addEventListener("input", () =>
-			updateValues(outPointElement, inPointElement)
-		)
+		inPointElement.addEventListener("input", () => updateValues(inPointElement, outPointElement))
+		outPointElement.addEventListener("input", () => updateValues(outPointElement, inPointElement))
 	}
 
 	phixer.preferences.analysisSampleRate = phixer.player.sampleRate
@@ -600,10 +655,7 @@ function initStep2() {
 				}
 
 				if (attr === "analysisSampleRate") {
-					newValue =
-						Math.round(
-							(slider.value * (phixer.player.sampleRate - 3000)) / 50000 + 0.6
-						) * 500
+					newValue = Math.round((slider.value * (phixer.player.sampleRate - 3000)) / 50000 + 0.6) * 500
 				}
 
 				phixer.preferences[attr] = Number(newValue)
@@ -613,15 +665,11 @@ function initStep2() {
 }
 
 function initStep3() {
-	document
-		.querySelectorAll('#step-3 input[name="output-format"]')
-		.forEach((radio) => {
-			radio.addEventListener("click", () => {
-				phixer.preferences.outputFormat = radio.getAttribute(
-					"phixer-output-format"
-				)
-			})
+	document.querySelectorAll('#step-3 input[name="output-format"]').forEach((radio) => {
+		radio.addEventListener("click", () => {
+			phixer.preferences.outputFormat = radio.getAttribute("phixer-output-format")
 		})
+	})
 }
 
 function initStep4() {}

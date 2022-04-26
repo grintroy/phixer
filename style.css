@@ -92,6 +92,8 @@
 
 #player {
 	height: 4rem;
+	overflow: hidden;
+	isolation: isolate;
 }
 
 #change-take-button-img {
@@ -207,48 +209,51 @@ input[type="range"]::-webkit-slider-thumb:focus {
 	padding-bottom: 3.5rem !important;
 }
 
-.ends-faded {
+.ends-faded,
+.ends-faded-black {
 	position: absolute;
 	height: 100%;
+}
+
+.ends-faded {
 	z-index: 1040;
 }
 
-.ends-faded::before {
+.ends-faded-black {
+	z-index: 1057;
+}
+
+.ends-faded::before,
+.ends-faded-black::before,
+.ends-faded::after,
+.ends-faded-black::after {
 	content: "";
 	width: 3rem;
 	height: 100%;
-	background: linear-gradient(
-		90deg,
-		rgba(255, 255, 255, 1),
-		rgba(255, 255, 255, 0)
-	);
+}
+
+.ends-faded::before {
+	background: linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0) 100%);
 }
 
 .ends-faded::after {
-	content: "";
-	width: 3rem;
-	height: 100%;
-	background: linear-gradient(
-		-90deg,
-		rgba(255, 255, 255, 1),
-		rgba(255, 255, 255, 0)
-	);
+	background: linear-gradient(to left, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0) 100%);
+}
+
+.ends-faded-black::before {
+	background: linear-gradient(to right, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 0.5rem, rgba(0, 0, 0, 0) 100%);
+}
+
+.ends-faded-black::after {
+	background: linear-gradient(to left, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 0.5rem, rgba(0, 0, 0, 0) 100%);
 }
 
 .ends-faded-darker::before {
-	background: linear-gradient(
-		90deg,
-		rgba(248, 249, 250, 1),
-		rgba(248, 249, 250, 0)
-	);
+	background: linear-gradient(to right, rgba(248, 249, 250, 1) 0, rgba(248, 249, 250, 1) 0.5rem, rgba(248, 249, 250, 0) 100%);
 }
 
 .ends-faded-darker::after {
-	background: linear-gradient(
-		-90deg,
-		rgba(248, 249, 250, 1),
-		rgba(248, 249, 250, 0)
-	);
+	background: linear-gradient(to left, rgba(248, 249, 250, 1) 0, rgba(248, 249, 250, 1) 0.5rem, rgba(248, 249, 250, 0) 100%);
 }
 
 .range-extension {
@@ -333,8 +338,8 @@ input[type="range"]::-webkit-slider-thumb:focus {
 	border-top-right-radius: 0 !important;
 }
 
-.dropdown-menu {
-	z-index: 1055;
+.dropdown {
+	z-index: 1060
 }
 
 .spinner-grow {
@@ -368,4 +373,24 @@ input[type="range"]::-webkit-slider-thumb:focus {
 
 #take-duration {
 	cursor: not-allowed;
+}
+
+#player-progress {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 1055;
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+#player-progress canvas {
+	z-index: 1056;
+}
+
+#player-progress-bg {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: black;
 }
