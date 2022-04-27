@@ -4,7 +4,7 @@ let phixer
 let player
 let playerSketch
 const inputChanged = new Event("inputChanged")
-const waveformLookahead = 500 // in samples
+const waveformLookahead = 200 // in samples
 let playerWavElement
 let playerWavProgress
 let playheadController
@@ -377,8 +377,8 @@ function initStep2() {
 
 				// Schedule re-render when the window is resized
 
-				window.addEventListener("resize", () => renderPlayer)
-				playerWavElement.addEventListener("inputChanged", () => renderPlayer)
+				window.addEventListener("resize", renderPlayer)
+				playerWavElement.addEventListener("inputChanged", renderPlayer)
 			}
 
 			p.draw = () => {
