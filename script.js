@@ -62,7 +62,9 @@ class PlayerButton {
 		this.stopButton.hidden = false
 		this.durationCoef = 1 / phixer.preferences.duration
 		this.now = Tone.now()
-		Tone.Transport.start(this.now, phixer.preferences.inPoint).stop(this.now + phixer.preferences.duration)
+		Tone.Transport.start(this.now, phixer.preferences.inPoint).stop(
+			this.now + phixer.preferences.duration
+		)
 		playheadController.opacity = 1
 		playerWavProgress.style.borderWidth = 5
 	}
@@ -95,7 +97,9 @@ const rangesTextMatrix = {
 
 // Bootstrap Tooltips component
 
-let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+let tooltipTriggerList = [].slice.call(
+	document.querySelectorAll('[data-bs-toggle="tooltip"]')
+)
 let tooltipList = tooltipTriggerList.map((tooltipTriggerEl) => {
 	return new bootstrap.Tooltip(tooltipTriggerEl, {
 		boundary: document.body
@@ -271,7 +275,9 @@ function initStep1() {
 		} else {
 			// Use DataTransfer interface to access the file(s)
 			for (let i = 0; i < event.dataTransfer.files.length; i++) {
-				console.log("... file[" + i + "].name = " + event.dataTransfer.files[i].name)
+				console.log(
+					"... file[" + i + "].name = " + event.dataTransfer.files[i].name
+				)
 			}
 		}
 
@@ -281,7 +287,9 @@ function initStep1() {
 	}
 
 	function dragOverHandler(event) {
-		document.querySelector("#upload-window").setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
+		document
+			.querySelector("#upload-window")
+			.setAttribute("style", "border-width: 0.5rem !important; cursor: copy;")
 
 		// Prevent default behavior (Prevent file from being opened)
 		event.preventDefault()
@@ -325,7 +333,9 @@ function initStep2() {
 			}
 		}
 
-		bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${(val / 50 - 1) * 1}rem - ${halfWidth}px)`
+		bubble.style.left = `calc(${val}% - ${(val / 50 - 1) * 3}rem - ${
+			(val / 50 - 1) * 1
+		}rem - ${halfWidth}px)`
 	}
 
 	{
@@ -426,13 +436,20 @@ function initStep2() {
 				let lineHeightsArray = []
 				const emptySpaceHeight = elHeight - yMargin * 2
 
-				for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
+				for (
+					let i = 0;
+					i < durationSamples;
+					i += bandWidth * pixelToSampleRatio
+				) {
 					const pixelX = i / pixelToSampleRatio
 
 					if (i < newData.length) {
 						const valSum = newData
 							.slice(Math.floor(i), Math.floor(i + waveformLookahead))
-							.reduce((prevVal, curVal) => Math.abs(prevVal) + Math.abs(curVal), 0)
+							.reduce(
+								(prevVal, curVal) => Math.abs(prevVal) + Math.abs(curVal),
+								0
+							)
 						const meanVal = valSum / waveformLookahead
 						const lineHeight = meanVal * yMarginCoef * elHeight
 						lineHeightsArray.push(lineHeight)
@@ -450,7 +467,11 @@ function initStep2() {
 					lineHeightsArray[i] *= normalizationCoef
 				})
 
-				for (let i = 0, j = 0; i < newData.length; i += bandWidth * pixelToSampleRatio, j++) {
+				for (
+					let i = 0, j = 0;
+					i < newData.length;
+					i += bandWidth * pixelToSampleRatio, j++
+				) {
 					const pixelX = i / pixelToSampleRatio
 					const margin = (elHeight - lineHeightsArray[j]) / 2
 					p.line(pixelX, margin, pixelX, margin + lineHeightsArray[j])
@@ -458,7 +479,11 @@ function initStep2() {
 
 				// Create a box indicating the end of the take
 
-				for (let i = -emptySpaceHeight + emptySpacePointX; i < elWidth; i += bandWidth * 2) {
+				for (
+					let i = -emptySpaceHeight + emptySpacePointX;
+					i < elWidth;
+					i += bandWidth * 2
+				) {
 					emptySpaceLinesArray.push({
 						x1: i,
 						y1: yMargin + emptySpaceHeight,
@@ -478,7 +503,12 @@ function initStep2() {
 					})
 
 					p.fill(0, 0)
-					p.rect(emptySpacePointX, yMargin, elWidth - emptySpacePointX + bandWidth / 2, elHeight - yMargin * 2)
+					p.rect(
+						emptySpacePointX,
+						yMargin,
+						elWidth - emptySpacePointX + bandWidth / 2,
+						elHeight - yMargin * 2
+					)
 				}
 			}
 		}
@@ -521,7 +551,9 @@ function initStep2() {
 
 			context.globalCompositeOperation = "source-in"
 
-			const color = getComputedStyle(document.documentElement).getPropertyValue("--bs-primary-rgb") // https://davidwalsh.name/css-variables-javascript
+			const color = getComputedStyle(document.documentElement).getPropertyValue(
+				"--bs-primary-rgb"
+			) // https://davidwalsh.name/css-variables-javascript
 			context.fillStyle = `rgb(${color})`
 			context.fillRect(0, 0, newCanvas.width, newCanvas.height)
 
@@ -552,7 +584,9 @@ function initStep2() {
 			}
 
 			value =
-				"0".repeat(4 - value.length) + value.slice(0, value.length - 2) + value.slice(value.length - 2, value.length)
+				"0".repeat(4 - value.length) +
+				value.slice(0, value.length - 2) +
+				value.slice(value.length - 2, value.length)
 
 			const valueDisplay = value.slice(0, 2) + ":" + value.slice(2, 4)
 
@@ -569,7 +603,9 @@ function initStep2() {
 			if (
 				(attribute === "inPoint" && timeInSec > phixer.preferences.outPoint) ||
 				(attribute === "outPoint" && timeInSec < phixer.preferences.inPoint) ||
-				Math.abs(phixer.preferences[attribute] - phixer.preferences[attribute2]) > 60
+				Math.abs(
+					phixer.preferences[attribute] - phixer.preferences[attribute2]
+				) > 60
 			) {
 				phixer.preferences.duration = "—"
 				durationBlock.classList.remove("bg-light")
@@ -613,11 +649,15 @@ function initStep2() {
 			return inputString
 		}
 
-		inPointElement.addEventListener("input", () => updateValues(inPointElement, outPointElement))
-		outPointElement.addEventListener("input", () => updateValues(outPointElement, inPointElement))
+		inPointElement.addEventListener("input", () =>
+			updateValues(inPointElement, outPointElement)
+		)
+		outPointElement.addEventListener("input", () =>
+			updateValues(outPointElement, inPointElement)
+		)
 	}
 
-	phixer.preferences.analysisSampleRate = phixer.player.sampleRate
+	phixer.preferences.analysisSampleRate = phixer.player.sampleRate / 2
 
 	{
 		// Listeners for preferences
@@ -661,12 +701,19 @@ function initStep2() {
 				let newValue
 
 				if (attr === "targetLCC") {
-					newValue = (slider.value / 200 + 0.5).toFixed(2)
+					newValue = (slider.value / 100).toFixed(2)
 				}
 
 				if (attr === "analysisSampleRate") {
 					newValue =
-						Math.round(Number(slider.value).map(0, 100, SAMPLERATERANGE.min, phixer.player.sampleRate) / 100) * 100
+						Math.round(
+							Number(slider.value).map(
+								0,
+								100,
+								SAMPLERATERANGE.min,
+								phixer.player.sampleRate
+							) / 100
+						) * 100
 				}
 
 				phixer.preferences[attr] = Number(newValue)
@@ -676,11 +723,15 @@ function initStep2() {
 }
 
 function initStep3() {
-	document.querySelectorAll('#step-3 input[name="output-format"]').forEach((radio) => {
-		radio.addEventListener("click", () => {
-			phixer.preferences.outputFormat = radio.getAttribute("phixer-output-format")
+	document
+		.querySelectorAll('#step-3 input[name="output-format"]')
+		.forEach((radio) => {
+			radio.addEventListener("click", () => {
+				phixer.preferences.outputFormat = radio.getAttribute(
+					"phixer-output-format"
+				)
+			})
 		})
-	})
 }
 
 function initStep4() {}
