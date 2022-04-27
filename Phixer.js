@@ -19,6 +19,7 @@ class Phixer {
 			duration: 5, // in seconds
 			targetLCC: 0.5, // target linear corellation coefficient
 			analysisSampleRate: 48000, // in samples per second
+			originalSampleRate: 48000,
 			primaryTake: 0, // index in the takes array
 			fadeTime: 0.02, // in seconds
 			outputFormat: "none",
@@ -30,7 +31,15 @@ class Phixer {
 		return new Promise((resolve, reject) => {
 			const promise = new Promise((resolve, reject) => {
 				try {
-					const initialAnalysis = this.analysePhase(this.takes)
+					this.buffers = []
+					this.takes.forEach((take) => {
+						this.buffers.push(take.arrayBuffer)
+					})
+					this.preferences.originalSampleRate = this.takes[0].sampleRate
+					const initialAnalysis = this.analysePhase(
+						this.buffers,
+						this.preferences.originalSampleRate
+					)
 					const newTakeBuffers = initialAnalysis.buffers
 					let nudgeValues = {
 						closestLCC: initialAnalysis.lcc,
@@ -44,20 +53,25 @@ class Phixer {
 						return segment2.concat(segment1)
 					}
 
-					const maxDispSamples = this.maxDisplacement * this.analysisSampleRate
+					const maxDispSamples =
+						this.preferences.maxDisplacement *
+						this.preferences.analysisSampleRate
 
-					const slideMatrix = [-1, 3, 0, 1] // make it a loop
+					const slideMatrix = [-3, 2] // make it a loop
 
-					let result = []
-					nudgeAndTrim(slideMatrix)
-					console.log(this.analysePhase(result)) // need to change how analysePlase treats buffers
+					const preparedStreams = nudgeAndTrim(slideMatrix)
+					this.analysePhase(preparedStreams, true, this.preferences.analysisSampleRate)
 
 					function nudgeAndTrim(slideMatrix) {
-						const maxSlide = Math.max.apply(null, slideMatrix)
-						const minSlide = Math.min.apply(null, slideMatrix)
+						const result = []
+						let maxSlide = Math.max.apply(null, slideMatrix)
+						let minSlide = Math.min.apply(null, slideMatrix)
 						nudgedPhase(slideMatrix).forEach((stream) => {
+							if (minSlide > -1) minSlide = undefined
 							result.push(stream.slice(maxSlide, minSlide))
 						})
+						console.log(result)
+						return result
 					}
 
 					function nudgedPhase(nudges) {
@@ -329,13 +343,17 @@ class Phixer {
 		return audioBuffer
 	}
 
-	analysePhase(takes) {
+	analysePhase(buffers, keepOriginal, sampleRate) {
 		let streams = []
 
-		for (let take of takes) {
-			streams.push(this.resample(this.changeLength(take), take.sampleRate))
-		}
-
+		if (keepOriginal !== true) {
+			sampleRate = keepOriginal
+			for (let buffer of buffers) {
+				streams.push(
+					this.resample(this.changeLength(buffer, sampleRate), sampleRate)
+				)
+			}
+		} else streams = buffers
 		return { lcc: this.corellationValue(streams), buffers: streams }
 	}
 
@@ -355,10 +373,7 @@ class Phixer {
 		return newStream
 	}
 
-	changeLength(take) {
-		const stream = take.arrayBuffer
-		const sampleRate = take.sampleRate
-
+	changeLength(stream, sampleRate) {
 		return stream.slice(
 			this.preferences.inPoint * sampleRate,
 			this.preferences.outPoint * sampleRate
