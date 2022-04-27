@@ -17,19 +17,47 @@ class Phixer {
 			inPoint: 0, // in seconds
 			outPoint: 5, // in seconds
 			duration: 5, // in seconds
-			targetLCC: 0.75, // target linear corellation coefficient
+			targetLCC: 0.5, // target linear corellation coefficient
 			analysisSampleRate: 48000, // in samples per second
 			primaryTake: 0, // index in the takes array
 			fadeTime: 0.02, // in seconds
-			outputFormat: "none"
+			outputFormat: "none",
+			maxDisplacement: 0.5 // in seconds (maximum displacement of nudged takes)
 		}
 	}
 
 	phix() {
 		return new Promise((resolve, reject) => {
 			const promise = new Promise((resolve, reject) => {
-				if (true) reject("error.") // write algorhythm
-				resolve()
+				try {
+					const initialAnalysis = this.analysePhase(this.takes)
+					const newTakeBuffers = initialAnalysis.buffers
+					let nudgeValues = {
+						closestLCC: initialAnalysis.lcc,
+						nudge: new Array(this.takes.length)
+					}
+
+					Array.prototype.slide = function (value) {
+						if (value == 0) return this
+						let segment1 = this.slice(0, -value)
+						let segment2 = this.slice(-value)
+						return segment2.concat(segment1)
+					}
+
+					const maxDispSamples = this.maxDisplacement * this.analysisSampleRate
+
+					// const result = iterate(newTakeBuffers)
+
+					// function nudgedPhase(...nudgeVals) {
+					// 	let nudgedStreams = []
+					// 	nudgeVals.forEach((nudge, i) => {
+
+					// 	})
+					// }
+
+				} catch (error) {
+					console.error(error)
+				}
 			})
 
 			promise
@@ -293,19 +321,16 @@ class Phixer {
 		let streams = []
 
 		for (let take of takes) {
-			streams.push(this.changeLength(this.resample(take)))
+			streams.push(this.resample(this.changeLength(take), take.sampleRate))
 		}
 
-		return this.corellationValue(streams)
+		return { lcc: this.corellationValue(streams), buffers: streams }
 	}
 
-	resample(take) {
-		const stream = take.arrayBuffer
-
+	resample(stream, sampleRate) {
 		let newStream = []
 
-		const resampleCoef =
-			1 / ((1 / take.sampleRate) * this.preferences.analysisSampleRate)
+		const resampleCoef = sampleRate / this.preferences.analysisSampleRate
 
 		for (
 			let sampleCounter = 0;
@@ -318,11 +343,13 @@ class Phixer {
 		return newStream
 	}
 
-	changeLength(stream) {
-		// Change length according to in and out points given in preferences and the sampling rate for analysis
+	changeLength(take) {
+		const stream = take.arrayBuffer
+		const sampleRate = take.sampleRate
+
 		return stream.slice(
-			this.preferences.inPoint * this.preferences.analysisSampleRate,
-			this.preferences.outPoint * this.preferences.analysisSampleRate
+			this.preferences.inPoint * sampleRate,
+			this.preferences.outPoint * sampleRate
 		)
 	}
 
