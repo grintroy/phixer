@@ -4,7 +4,6 @@ let phixer
 let player
 let playerSketch
 const inputChanged = new Event("inputChanged")
-const waveformLookahead = 200 // in samples
 let playerWavElement
 let playerWavProgress
 let playheadController
@@ -420,6 +419,7 @@ function initStep2() {
 				const newData = data.slice(inpointSamples, outpointSamples)
 
 				const pixelToSampleRatio = durationSamples / elWidth
+				const waveformLookahead = bandWidth * pixelToSampleRatio // in samples
 
 				let emptySpacePointX
 				let emptySpaceLinesArray = []

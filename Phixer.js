@@ -35,7 +35,7 @@ class Phixer {
 			promise
 				.then(() => resolve())
 				.catch((e) => {
-					phixer.initError(e)
+					this.initError(e)
 					reject()
 				})
 		})
@@ -47,7 +47,7 @@ class Phixer {
 			promise
 				.then(() => resolve())
 				.catch((e) => {
-					phixer.initError(e)
+					this.initError(e)
 					reject()
 				})
 		})
