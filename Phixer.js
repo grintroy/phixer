@@ -39,22 +39,34 @@ class Phixer {
 
 					Array.prototype.slide = function (value) {
 						if (value == 0) return this
-						let segment1 = this.slice(0, -value)
-						let segment2 = this.slice(-value)
+						const segment1 = this.slice(0, -value)
+						const segment2 = this.slice(-value)
 						return segment2.concat(segment1)
 					}
 
 					const maxDispSamples = this.maxDisplacement * this.analysisSampleRate
 
-					// const result = iterate(newTakeBuffers)
+					const slideMatrix = [-1, 3, 0, 1] // make it a loop
 
-					// function nudgedPhase(...nudgeVals) {
-					// 	let nudgedStreams = []
-					// 	nudgeVals.forEach((nudge, i) => {
+					let result = []
+					nudgeAndTrim(slideMatrix)
+					console.log(this.analysePhase(result)) // need to change how analysePlase treats buffers
 
-					// 	})
-					// }
+					function nudgeAndTrim(slideMatrix) {
+						const maxSlide = Math.max.apply(null, slideMatrix)
+						const minSlide = Math.min.apply(null, slideMatrix)
+						nudgedPhase(slideMatrix).forEach((stream) => {
+							result.push(stream.slice(maxSlide, minSlide))
+						})
+					}
 
+					function nudgedPhase(nudges) {
+						const nudgedStreams = []
+						nudges.forEach((nudge, i) => {
+							nudgedStreams.push(newTakeBuffers[i].slide(nudge))
+						})
+						return nudgedStreams
+					}
 				} catch (error) {
 					console.error(error)
 				}
