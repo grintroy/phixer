@@ -27,9 +27,36 @@ class Phixer {
 		}
 	}
 
+	static Progress = class {
+		constructor() {
+			this.resolution = 8
+			this.sampledPos = undefined
+		}
+
+		show(value, min, max) {
+			const v = value - min
+			const range = max - min
+			const position = v / range
+			const tmp = Math.floor(position * this.resolution)
+			if (this.sampledPos !== tmp) {
+				this.sampledPos = tmp
+				const blank = this.resolution - this.sampledPos
+				console.log(
+					"Progress: [ " + "■ ".repeat(this.sampledPos) + "□ ".repeat(blank) + "]"
+				)
+			}
+		}
+
+		done() {
+			this.show(1, 0, 1)
+			this.sampledPos = undefined
+		}
+	}
+
 	phix() {
 		return new Promise((resolve, reject) => {
 			const promise = new Promise((resolve, reject) => {
+				const progress = new Phixer.Progress()
 				try {
 					this.buffers = []
 					this.takes.forEach((take) => {
@@ -72,6 +99,7 @@ class Phixer {
 						Math.abs(i) <= maxDispSamples;
 						i += incr, incr = -1 * incr - Math.sign(incr)
 					) {
+						progress.show(Math.abs(i), 0, maxDispSamples)
 						let preparedMatrix = new Array(this.takes.length).fill(undefined)
 						preparedMatrix.forEach((cell, n) => {
 							preparedMatrix[n] = i * nudgeMatrixTemplate[n]
@@ -100,6 +128,8 @@ class Phixer {
 							}
 						}
 					}
+
+					progress.done()
 
 					console.log(this.result)
 					resolve()
