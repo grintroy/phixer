@@ -42,7 +42,8 @@ class Phixer {
 					)
 					initialAnalysis.lcc = initialAnalysis.lcc.toFixed(2)
 					const newTakeBuffers = initialAnalysis.buffers
-					let tracked = {
+
+					this.result = {
 						closestLCC: initialAnalysis.lcc,
 						buffers: this.buffers,
 						nudge: [0, 0]
@@ -61,7 +62,7 @@ class Phixer {
 						this.preferences.maxDisplacement *
 						this.preferences.analysisSampleRate
 
-					console.log(maxDispSamples)
+					console.log("Maximum displacement for matching: " + maxDispSamples)
 
 					const nudgeMatrixTemplate = new Array(this.takes.length).fill(1)
 					nudgeMatrixTemplate[this.preferences.primaryTake] = 0
@@ -86,21 +87,22 @@ class Phixer {
 						if (
 							Math.abs(
 								analysisResults.lcc.toFixed(2) - this.preferences.targetLCC
-							) < Math.abs(tracked.closestLCC - this.preferences.targetLCC)
+							) < Math.abs(this.result.closestLCC - this.preferences.targetLCC)
 						) {
-							console.log("now")
-							tracked.closestLCC = analysisResults.lcc
-							tracked.buffers = analysisResults.buffers
-							tracked.nudge = preparedMatrix
+							this.result.closestLCC = analysisResults.lcc
+							this.result.buffers = analysisResults.buffers
+							this.result.nudge = preparedMatrix
 							if (
 								analysisResults.lcc.toFixed(2) == this.preferences.targetLCC
 							) {
+								console.log("Matched to two decimal places.")
 								break
 							}
 						}
 					}
 
-					console.log(tracked)
+					console.log(this.result)
+					resolve()
 
 					function nudgeAndTrim(nudgeMatrix) {
 						const result = []
@@ -158,7 +160,7 @@ class Phixer {
 					this.preferences.duration
 				)
 					reject("duration does not match to in/out points.")
-				if (this.preferences.targetLCC < 0.5 || this.preferences.targetLCC > 1)
+				if (this.preferences.targetLCC < 0 || this.preferences.targetLCC > 1)
 					reject("targetLCC is out of range.")
 				if (
 					this.preferences.analysisSampleRate < 3000 ||
