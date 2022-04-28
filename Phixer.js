@@ -23,7 +23,7 @@ class Phixer {
 			primaryTake: 0, // index in the takes array
 			fadeTime: 0.02, // in seconds
 			outputFormat: "none",
-			maxDisplacement: 0.5 // in seconds (maximum displacement of nudged takes)
+			maxDisplacement: 0.01 // in seconds (maximum displacement of nudged takes)
 		}
 	}
 
@@ -40,11 +40,15 @@ class Phixer {
 						this.buffers,
 						this.preferences.originalSampleRate
 					)
+					initialAnalysis.lcc = initialAnalysis.lcc.toFixed(2)
 					const newTakeBuffers = initialAnalysis.buffers
-					let nudgeValues = {
+					let tracked = {
 						closestLCC: initialAnalysis.lcc,
-						nudge: new Array(this.takes.length)
+						buffers: this.buffers,
+						nudge: [0, 0]
 					}
+
+					console.log("Original LCC: " + initialAnalysis.lcc)
 
 					Array.prototype.slide = function (value) {
 						if (value == 0) return this
@@ -57,20 +61,55 @@ class Phixer {
 						this.preferences.maxDisplacement *
 						this.preferences.analysisSampleRate
 
-					const slideMatrix = [-3, 2] // make it a loop
+					console.log(maxDispSamples)
 
-					const preparedStreams = nudgeAndTrim(slideMatrix)
-					this.analysePhase(preparedStreams, true, this.preferences.analysisSampleRate)
+					const nudgeMatrixTemplate = new Array(this.takes.length).fill(1)
+					nudgeMatrixTemplate[this.preferences.primaryTake] = 0
 
-					function nudgeAndTrim(slideMatrix) {
+					for (
+						let i = 0, incr = 1;
+						Math.abs(i) <= maxDispSamples;
+						i += incr, incr = -1 * incr - Math.sign(incr)
+					) {
+						let preparedMatrix = new Array(this.takes.length).fill(undefined)
+						preparedMatrix.forEach((cell, n) => {
+							preparedMatrix[n] = i * nudgeMatrixTemplate[n]
+						})
+
+						const preparedStreams = nudgeAndTrim(preparedMatrix)
+						const analysisResults = this.analysePhase(
+							preparedStreams,
+							true,
+							this.preferences.analysisSampleRate
+						)
+
+						if (
+							Math.abs(
+								analysisResults.lcc.toFixed(2) - this.preferences.targetLCC
+							) < Math.abs(tracked.closestLCC - this.preferences.targetLCC)
+						) {
+							console.log("now")
+							tracked.closestLCC = analysisResults.lcc
+							tracked.buffers = analysisResults.buffers
+							tracked.nudge = preparedMatrix
+							if (
+								analysisResults.lcc.toFixed(2) == this.preferences.targetLCC
+							) {
+								break
+							}
+						}
+					}
+
+					console.log(tracked)
+
+					function nudgeAndTrim(nudgeMatrix) {
 						const result = []
-						let maxSlide = Math.max.apply(null, slideMatrix)
-						let minSlide = Math.min.apply(null, slideMatrix)
-						nudgedPhase(slideMatrix).forEach((stream) => {
+						let maxSlide = Math.max.apply(null, nudgeMatrix)
+						let minSlide = Math.min.apply(null, nudgeMatrix)
+						nudgedPhase(nudgeMatrix).forEach((stream) => {
 							if (minSlide > -1) minSlide = undefined
 							result.push(stream.slice(maxSlide, minSlide))
 						})
-						console.log(result)
 						return result
 					}
 
@@ -140,7 +179,7 @@ class Phixer {
 			promise
 				.then(() => resolve())
 				.catch((e) => {
-					phixer.initError("Invalid preferences: " + e)
+					this.initError("Invalid preferences: " + e)
 					reject()
 				})
 		})
@@ -149,6 +188,10 @@ class Phixer {
 	initError(e) {
 		this.error = new Error(e)
 		console.error(this.error)
+		try {
+			this.context.dispose()
+			console.warn("The OfflineContext has been disposed.")
+		} catch (e) {}
 	}
 
 	initPlayer() {
@@ -224,13 +267,13 @@ class Phixer {
 			let newTake
 			const nameNumbersSF = 2 // significant figures for the take name index
 
-			if (files.length === 0) {
-				reject("No files uploaded.")
-			}
+			if (files.length === 0) reject("No files uploaded.")
 
 			// https://codepen.io/dmack/pen/VLxpyv
 
-			for (let file of files) {
+			let fileCount = 1
+
+			for (const file of files) {
 				const fileReader = new FileReader()
 				fileReader.readAsArrayBuffer(file)
 
@@ -243,9 +286,7 @@ class Phixer {
 							} MB)`
 						)
 
-						if (fileExtension !== "wav") {
-							throw "Unsupported file format."
-						}
+						if (fileExtension !== "wav") throw "Unsupported file format."
 
 						const fileProperties = this.readProperties(fileReader.result)
 
@@ -276,10 +317,15 @@ class Phixer {
 								)
 
 								this.takes.push(newTake)
-
 								newTake.initPlayer()
-
-								resolve()
+							}
+							try {
+								if (this.takes.length > 2)
+									throw "The total channel count is over two. Phixer only works with 2 channels at the moment."
+								if (files.length === fileCount) resolve()
+								fileCount++
+							} catch (e) {
+								reject(e)
 							}
 						})
 					} catch (e) {
@@ -381,18 +427,19 @@ class Phixer {
 	}
 
 	corellationValue(streams) {
-		let length = streams[0].length
+		const length = streams[0].length
+		const numOfStreams = streams.length
 
 		// Calculation of the sum of the products and the product of sums of squares following the original formula.
-		let numerator = new Array(length).fill(1)
-		let denominator = new Array(streams.length).fill(0)
+		const numerator = new Array(length).fill(1)
+		const denominator = new Array(numOfStreams).fill(0)
 
 		for (let i = 0; i < length; i++) {
-			for (let n = 0; n < streams.length; n++) {
+			for (let n = 0; n < numOfStreams; n++) {
 				numerator[i] *= streams[n][i]
-				denominator[n] += Math.pow(streams[n][i], 2)
+				denominator[n] += Math.pow(streams[n][i], numOfStreams)
 			}
-		} // check and explain
+		}
 
 		const corSumOfProducts = numerator.reduce(
 			(previousValue, currentValue) => previousValue + currentValue,
@@ -403,6 +450,12 @@ class Phixer {
 			1 // initial value
 		)
 
-		return corSumOfProducts / Math.sqrt(corProductOfSums)
+		Math.realPow = function (x, y) {
+			// https://stackoverflow.com/questions/14575697/math-pow-with-negative-numbers-and-non-integer-powers?noredirect=1&lq=1
+			if (x > 0) return Math.pow(x, y)
+			return -1 * Math.pow(-x, y)
+		}
+
+		return corSumOfProducts / Math.realPow(corProductOfSums, 1 / numOfStreams)
 	}
 }
