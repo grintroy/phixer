@@ -130,6 +130,7 @@ class Phixer {
 					}
 
 					progress.done()
+					this.result.initialLCC = initialAnalysis.lcc
 
 					console.log(this.result)
 					resolve()

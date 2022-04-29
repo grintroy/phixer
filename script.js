@@ -15,6 +15,8 @@ const SAMPLERATERANGE = {
 }
 const MAXDURATION = 60
 
+let updateProgress
+
 // https://gist.github.com/xposedbones/75ebaef3c10060a3ee3b246166caab56
 Number.prototype.map = function (in_min, in_max, out_min, out_max) {
 	return ((this - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
@@ -117,7 +119,6 @@ const uploadWindow = document.querySelector("#upload-window")
 
 const buttonStep1 = document.querySelector("#btn-step1")
 
-const spinner = document.querySelector("#spinner")
 const spinnerContainer = document.querySelector("#spinner-container")
 const footer = document.querySelector("#footer")
 const errorWindow = document.querySelector("#error")
@@ -151,7 +152,7 @@ allBtnNext.forEach((button) => {
 	button.addEventListener("click", () => {
 		currentStep.style.opacity = 0
 		footer.style.opacity = 0
-		spinner.hidden = false
+		spinnerContainer.classList.remove("visually-hidden")
 		spinnerContainer.style.opacity = 1
 
 		currentStep.ontransitionend = (e) => {
@@ -210,7 +211,7 @@ function initNextStepLoaded(nextStep, nStepId) {
 
 		nextStep.ontransitionend = (e) => {
 			if (e.propertyName === "opacity") {
-				spinner.hidden = true
+				spinnerContainer.classList.add("visually-hidden")
 			}
 		}
 	}, 50)
@@ -734,7 +735,37 @@ function initStep3() {
 		})
 }
 
-function initStep4() {}
+function initStep4() {
+	resultsWindow.querySelector("#initial-lcc").innerHTML =
+		phixer.result.initialLCC
+	resultsWindow.querySelector("#result-lcc").innerHTML =
+		Number(phixer.result.closestLCC).toFixed(2)
+
+	let num
+	phixer.result.nudge.forEach((n, i) => {
+		if (i) num = i
+	})
+	const takeToNudge = phixer.takes[num]
+
+	resultsWindow.querySelector("#take-name").innerHTML = takeToNudge.name
+
+	if (Math.sign(phixer.result.nudge[num]) < 0)
+		resultsWindow.querySelector("#sign").innerHTML = "-"
+	else resultsWindow.querySelector("#sign").innerHTML = "+"
+
+	const resampleCoef =
+		phixer.preferences.originalSampleRate /
+		phixer.preferences.analysisSampleRate
+
+	resultsWindow.querySelector("#samples").innerHTML = Math.round(Math.abs(
+		phixer.result.nudge[num] * resampleCoef)
+	)
+
+	if (phixer.preferences.outputFormat === "none") {
+		document.querySelector("#btn-step4").innerHTML = "← Start over"
+		document.querySelector("#btn-step4").parentElement.href = ""
+	}
+}
 
 function hideElements() {
 	errorWindow.hidden = true
@@ -744,6 +775,6 @@ function hideElements() {
 	document.querySelector("#block-2-2-2").hidden = true
 	document.querySelector("#block-2-3-2").hidden = true
 	document.querySelector("#stop-button").hidden = true
-	spinner.hidden = true
-	spinnerContainer.style.opacity = 1
+	spinnerContainer.classList.add("visually-hidden")
+	spinnerContainer.style.opacity = 0
 }

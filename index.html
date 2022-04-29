@@ -113,25 +113,25 @@
 			</nav>
 		</header>
 
-		<!-- Spinner overlay -->
-		<div
-			class="container-fluid position-absolute p-0 m-0 d-flex pe-none"
-			style="width: 100%; height: 82%"
-		>
-			<div
-				class="d-flex flex-fill justify-content-center align-items-center pe-none"
-				id="spinner-container"
-				style="width: 100%; height: 100%"
-			>
-				<div class="spinner-grow" role="status" id="spinner">
-					<span class="visually-hidden">Loading...</span>
-				</div>
-			</div>
-		</div>
-
 		<!-- Steps and errors -->
 		<div class="container my-4 p-0 add-padding">
 			<main>
+				<!-- Spinner overlay -->
+				<div
+					class="container d-flex flex-fill position-fixed justify-content-center align-items-center pe-none"
+					id="spinner-container"
+					style="height: calc(100% - 8.7rem)"
+				>
+					<div class="d-flex flex-column">
+						<div>
+							<div class="spinner-grow" role="status">
+								<span class="visually-hidden">Loading...</span>
+							</div>
+						</div>
+						<!-- <p class="mb-0 fs-4 fw-bold text-center"><span id="spinner"></span>%</p> -->
+					</div>
+				</div>
+
 				<!-- Error screen-->
 				<div class="container step-container" id="error" style="opacity: 0">
 					<h1 class="fw-bold">Error</h1>
@@ -612,63 +612,44 @@
 					<hr id="header-hr" class="col-lg-2 col-md-3 col-4 m-0" />
 
 					<section class="py-4">
-						<div class="container-fluid d-flex px-0 fs-5">
-							<div class="text-muted fw-bold">
-								<p>1.</p>
-							</div>
+						<div class="container-fluid d-flex px-0 fs-5 pb-2">
 							<div class="container-fluid pe-0">
-								<fieldset>
-									<legend class="fs-5">Choose the output format.</legend>
-									<div class="form-check">
-										<input
-											type="radio"
-											class="form-check-input"
-											phixer-output-format="none"
-											checked
-											id="3-1-1-radio"
-											name="output-format"
-										/>
-										<label for="3-1-1-radio fs-5" class="form-check-label"
-											>None</label
-										>
-									</div>
-									<div class="form-check">
-										<input
-											type="radio"
-											class="form-check-input"
-											phixer-output-format="wav"
-											id="3-1-2-radio"
-											name="output-format"
-										/>
-										<label for="3-1-2-radio fs-5" class="form-check-label"
-											>WAV</label
-										>
-									</div>
-									<div class="form-check">
-										<input
-											type="radio"
-											class="form-check-input"
-											phixer-output-format="mp3"
-											id="3-1-3-radio"
-											name="output-format"
-										/>
-										<label for="3-1-3-radio fs-5" class="form-check-label"
-											>MP3</label
-										>
-									</div>
-								</fieldset>
+								<p class="m-0 p-0">LCC:</p>
+								<div class="bg-light p-4 mt-3">
+									<p class="fw-bold fs-3 m-0 p-0">
+										<span id="initial-lcc"></span> →
+										<span id="result-lcc"></span>
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="container-fluid d-flex px-0 fs-5 py-2">
+							<div class="container-fluid pe-0">
+								<p class="m-0 p-0">Nudging advice (approximate):</p>
+								<div class="bg-light p-4 mt-3">
+									<p class="m-0 p-0">
+										<span id="take-name"></span><br /><span
+											class="fw-bold fs-3"
+											id="sign"
+										></span>
+										<span class="fw-bold fs-3" id="samples"></span
+										><span class="fw-bold fs-3"> samples</span>
+									</p>
+								</div>
 							</div>
 						</div>
 					</section>
 
 					<hr class="border mt-2 mb-0" />
-					<button
-						type="button"
-						class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next"
-						id="btn-step3"
-					>
-						← Start over
-					</button>
+					<a href="/#">
+						<button
+							type="button"
+							class="col-md-4 col-sm-6 col-12 btn btn-primary text-black fs-3 fw-bold text-start px-4 py-2 my-3 rounded-3 button-next"
+							id="btn-step4"
+						>
+							Download ↓
+						</button>
+					</a>
 				</div>
 			</main>
 
