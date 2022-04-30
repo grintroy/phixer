@@ -1,15 +1,13 @@
 class Phixer {
 	constructor(input) {
-		this.input = input
-
-		console.log("Phixer is initialized. Files: " + input.length)
-
 		if (!input) {
-			console.warn(`Phixer needs an input when initializing`)
+			this.initError(`Phixer needs an input when initializing`)
 			return
 		}
 
+		this.input = input
 		Tone.start()
+		console.log("Phixer is initialized. Files: " + input.length)
 
 		this.takes = []
 		this.preferences = {
@@ -42,7 +40,10 @@ class Phixer {
 				this.sampledPos = tmp
 				const blank = this.resolution - this.sampledPos
 				console.log(
-					"Progress: [ " + "■ ".repeat(this.sampledPos) + "□ ".repeat(blank) + "]"
+					"Progress: [ " +
+						"■ ".repeat(this.sampledPos) +
+						"□ ".repeat(blank) +
+						"]"
 				)
 			}
 		}
@@ -52,6 +53,8 @@ class Phixer {
 			this.sampledPos = undefined
 		}
 	}
+
+	render() {}
 
 	phix() {
 		return new Promise((resolve, reject) => {
@@ -73,7 +76,8 @@ class Phixer {
 					this.result = {
 						closestLCC: initialAnalysis.lcc,
 						buffers: this.buffers,
-						nudge: [0, 0]
+						nudge: [0, 0],
+						inverted: false
 					}
 
 					console.log("Original LCC: " + initialAnalysis.lcc)
@@ -89,44 +93,69 @@ class Phixer {
 						this.preferences.maxDisplacement *
 						this.preferences.analysisSampleRate
 
-					console.log("Maximum displacement for matching: " + maxDispSamples)
+					console.log(
+						"Resampled at " +
+							this.preferences.analysisSampleRate +
+							" samples per second."
+					)
+					console.log(
+						"Maximum displacement for matching (in samples): " + maxDispSamples
+					)
 
 					const nudgeMatrixTemplate = new Array(this.takes.length).fill(1)
 					nudgeMatrixTemplate[this.preferences.primaryTake] = 0
 
-					for (
+					main: for (
 						let i = 0, incr = 1;
 						Math.abs(i) <= maxDispSamples;
 						i += incr, incr = -1 * incr - Math.sign(incr)
 					) {
 						progress.show(Math.abs(i), 0, maxDispSamples)
-						let preparedMatrix = new Array(this.takes.length).fill(undefined)
-						preparedMatrix.forEach((cell, n) => {
-							preparedMatrix[n] = i * nudgeMatrixTemplate[n]
+						const preparedMatrix = []
+						nudgeMatrixTemplate.forEach((cell) => {
+							preparedMatrix.push(i * cell)
 						})
+						let preparedStreams = nudgeAndTrim(preparedMatrix)
+						let inverted = false
 
-						const preparedStreams = nudgeAndTrim(preparedMatrix)
-						const analysisResults = this.analysePhase(
-							preparedStreams,
-							true,
-							this.preferences.analysisSampleRate
-						)
+						do {
+							if (inverted) preparedStreams = this.invert(preparedStreams)
 
-						if (
-							Math.abs(
-								analysisResults.lcc.toFixed(2) - this.preferences.targetLCC
-							) < Math.abs(this.result.closestLCC - this.preferences.targetLCC)
-						) {
-							this.result.closestLCC = analysisResults.lcc
-							this.result.buffers = analysisResults.buffers
-							this.result.nudge = preparedMatrix
+							const analysisResults = this.analysePhase(
+								preparedStreams,
+								true,
+								this.preferences.analysisSampleRate
+							)
+
 							if (
-								analysisResults.lcc.toFixed(2) == this.preferences.targetLCC
+								Math.abs(
+									analysisResults.lcc.toFixed(2) - this.preferences.targetLCC
+								) <
+								Math.abs(this.result.closestLCC - this.preferences.targetLCC)
 							) {
-								console.log("Matched to two decimal places.")
-								break
+								const resampleCoef =
+									phixer.preferences.originalSampleRate /
+									phixer.preferences.analysisSampleRate
+
+								const convertedMatrix = []
+								preparedMatrix.forEach((cell) => {
+									convertedMatrix.push(Math.round(cell * resampleCoef))
+								})
+
+								this.result.closestLCC = analysisResults.lcc
+								this.result.buffers = analysisResults.buffers
+								this.result.nudge = convertedMatrix
+								this.result.inverted = inverted
+								if (
+									analysisResults.lcc.toFixed(2) == this.preferences.targetLCC
+								) {
+									console.log("Matched to two decimal places.")
+									break main
+								}
 							}
-						}
+
+							inverted = !inverted
+						} while (inverted)
 					}
 
 					progress.done()
@@ -154,7 +183,7 @@ class Phixer {
 						return nudgedStreams
 					}
 				} catch (error) {
-					console.error(error)
+					reject(error)
 				}
 			})
 
@@ -165,6 +194,17 @@ class Phixer {
 					reject()
 				})
 		})
+	}
+
+	invert(streams) {
+		streams.forEach((stream, i) => {
+			if (i !== this.preferences.primaryTake) {
+				stream.forEach((sample, n) => {
+					stream[n] = -sample
+				})
+			}
+		})
+		return streams
 	}
 
 	checkLoaded() {
@@ -296,7 +336,7 @@ class Phixer {
 	}
 
 	readFiles(files) {
-		const promise = new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			let newTake
 			const nameNumbersSF = 2 // significant figures for the take name index
 
@@ -319,7 +359,7 @@ class Phixer {
 							} MB)`
 						)
 
-						if (fileExtension !== "wav") throw "Unsupported file format."
+						if (fileExtension !== "wav") reject("Unsupported file format.")
 
 						const fileProperties = this.readProperties(fileReader.result)
 
@@ -354,8 +394,16 @@ class Phixer {
 							}
 							try {
 								if (this.takes.length > 2)
-									throw "The total channel count is over two. Phixer only works with 2 channels at the moment."
-								if (files.length === fileCount) resolve()
+									reject(
+										"The total channel count is over two. Phixer only works with 2 channels at the moment."
+									)
+								if (files.length === fileCount) {
+									if (this.takes.length === 1)
+										reject(
+											"The total channel count is one. Phixer only works with 2 channels at the moment."
+										)
+									resolve()
+								}
 								fileCount++
 							} catch (e) {
 								reject(e)
@@ -367,8 +415,6 @@ class Phixer {
 				}
 			}
 		})
-
-		return promise
 	}
 
 	readProperties(buffer) {
@@ -384,7 +430,7 @@ class Phixer {
 			)
 
 		const isWave = getChunkName(0).includes("RIFF")
-		if (!isWave) throw new Error("Unsupported file format.")
+		if (!isWave) throw "Unsupported file format."
 
 		let offset = 12
 		let chunkName = getChunkName(offset)
