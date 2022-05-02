@@ -87,9 +87,10 @@ const initButtonStep = {
 	2: () => {
 		playerButton.stop()
 		window.removeEventListener("resize", renderPlayer)
+		console.log("Current preferences:", phixer.preferences)
 	},
 	3: () => {
-		console.log("Current preferences:", phixer.preferences)
+		// console.log("Current preferences:", phixer.preferences)
 	}
 }
 
