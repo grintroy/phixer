@@ -50,7 +50,7 @@ class Phixer {
 		}
 	}
 
-	render() {}
+	// render() {}
 
 	phix() {
 		return new Promise((resolve, reject) => {
@@ -284,8 +284,6 @@ class Phixer {
 			this.button = document.getElementById("player-button")
 
 			this.updatePoints()
-
-			this.takeNum = 1
 		}
 
 		updatePoints() {
@@ -439,7 +437,7 @@ class Phixer {
 				streams.push(this.resample(this.changeLength(buffer, sampleRate), sampleRate))
 			}
 		} else streams = buffers
-		return { lcc: this.corellationValue(streams), buffers: streams }
+		return { lcc: this.correlationValue(streams), buffers: streams }
 	}
 
 	resample(stream, sampleRate) {
@@ -461,7 +459,7 @@ class Phixer {
 		)
 	}
 
-	corellationValue(streams) {
+	correlationValue(streams) {
 		const length = streams[0].length
 		const numOfStreams = streams.length
 

@@ -32,7 +32,6 @@ class PlayerButton {
 		})
 
 		this.updateConnection()
-		this.buttonElement = element
 		this.playButton = element.querySelector("[phixer-player-button='play']")
 		this.stopButton = element.querySelector("[phixer-player-button='stop']")
 	}
@@ -51,7 +50,7 @@ class PlayerButton {
 
 	start() {
 		this.playButton.hidden = true
-		this.buttonElement.style.backgroundColor = "black"
+		this.element.style.backgroundColor = "black"
 		this.stopButton.hidden = false
 		this.durationCoef = 1 / phixer.preferences.duration
 		this.now = Tone.now()
@@ -65,7 +64,7 @@ class PlayerButton {
 	stop() {
 		playheadController.opacity = 0
 		this.playButton.hidden = false
-		this.buttonElement.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
+		this.element.style.backgroundColor = "rgb(var(--bs-primary-rgb))"
 		this.stopButton.hidden = true
 		Tone.Transport.stop()
 	}
