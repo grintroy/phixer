@@ -578,11 +578,17 @@ const initStep = {
 		}
 	},
 	3: () => {
-		document.querySelectorAll('#step-3 input[name="output-format"]').forEach((radio) => {
-			radio.addEventListener("click", () => {
-				phixer.preferences.outputFormat = radio.getAttribute("phixer-output-format")
-			})
-		})
+		// This step is hidden since the rendering feature has not been implemented yet.
+
+		// document.querySelectorAll('#step-3 input[name="output-format"]').forEach((radio) => {
+		// 	radio.addEventListener("click", () => {
+		// 		phixer.preferences.outputFormat = radio.getAttribute("phixer-output-format")
+		// 	})
+		// })
+
+		initNextStep(null, 4)
+		document.querySelector("#step-3").style.opacity = 0
+		document.querySelector("#step-3").hidden = true
 	},
 	4: () => {
 		resultsWindow.querySelector("#initial-lcc").innerHTML = phixer.result.initialLCC
