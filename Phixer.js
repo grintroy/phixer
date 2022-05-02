@@ -26,6 +26,53 @@ class Phixer {
 		}
 	}
 
+	static Take = class {
+		constructor(parent, name, buffer, duration, sampleRate) {
+			this.name = name
+			this.arrayBuffer = buffer
+			this.duration = duration // in seconds
+			this.sampleRate = sampleRate
+			this.parent = parent
+
+			this.audioBuffer = parent.convertToAudioBuffer(buffer, duration, sampleRate)
+		}
+
+		initPlayer() {
+			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
+			this.player.fadeIn = 0.03
+			this.player.fadeOut = 0.07
+			this.parent.player.connect(this.parent.takes[0])
+		}
+
+		onload() {
+			console.log(this.name + " is loaded.")
+			this.parent.initPlayer()
+		}
+	}
+
+	static Player = class {
+		constructor(parent) {
+			this.parent = parent
+			this.updatePoints()
+		}
+
+		updatePoints() {
+			this.inPoint = this.parent.preferences.inPoint
+			this.outPoint = this.parent.preferences.outPoint
+			this.duration = this.parent.preferences.duration
+		}
+
+		connect(take) {
+			try {
+				this.connectedTonePlayer.unsync()
+			} catch {}
+			this.connectedTake = take
+			this.connectedTonePlayer = take.player
+			this.connectedTonePlayer.sync().start()
+			this.sampleRate = take.sampleRate
+		}
+	}
+
 	static Progress = class {
 		constructor() {
 			this.resolution = 8
@@ -49,8 +96,6 @@ class Phixer {
 			this.sampledPos = undefined
 		}
 	}
-
-	// render() {}
 
 	phix() {
 		return new Promise((resolve, reject) => {
@@ -79,7 +124,7 @@ class Phixer {
 					console.log("Original LCC: " + initialAnalysis.lcc)
 
 					Array.prototype.slide = function (value) {
-						if (value == 0) return this
+						if (!value) return this
 						const segment1 = this.slice(0, -value)
 						const segment2 = this.slice(-value)
 						return segment2.concat(segment1)
@@ -251,56 +296,6 @@ class Phixer {
 
 	updateDuration() {
 		this.preferences.duration = this.preferences.outPoint - this.preferences.inPoint
-	}
-
-	static Take = class {
-		constructor(parent, name, buffer, duration, sampleRate) {
-			this.name = name
-			this.arrayBuffer = buffer
-			this.duration = duration // in seconds
-			this.sampleRate = sampleRate
-			this.parent = parent
-
-			this.audioBuffer = parent.convertToAudioBuffer(buffer, duration, sampleRate)
-		}
-
-		initPlayer() {
-			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
-			this.player.fadeIn = 0.03
-			this.player.fadeOut = 0.07
-			this.parent.player.connect(this.parent.takes[0])
-		}
-
-		onload() {
-			console.log(this.name + " is loaded.")
-			this.parent.initPlayer()
-		}
-	}
-
-	static Player = class {
-		constructor(parent) {
-			this.parent = parent
-
-			this.button = document.getElementById("player-button")
-
-			this.updatePoints()
-		}
-
-		updatePoints() {
-			this.inPoint = this.parent.preferences.inPoint
-			this.outPoint = this.parent.preferences.outPoint
-			this.duration = this.parent.preferences.duration
-		}
-
-		connect(take) {
-			try {
-				this.connectedTonePlayer.unsync()
-			} catch {}
-			this.connectedTake = take
-			this.connectedTonePlayer = take.player
-			this.connectedTonePlayer.sync().start()
-			this.sampleRate = take.sampleRate
-		}
 	}
 
 	readFiles(files) {
