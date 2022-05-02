@@ -278,7 +278,7 @@ const initStep = {
 					}
 				}
 
-				const renderPlayer = () => {
+				renderPlayer = () => {
 					drawWaveform()
 					progressWavCanvasInit()
 				}
@@ -586,9 +586,9 @@ const initStep = {
 		// 	})
 		// })
 
-		initNextStep(null, 4)
 		document.querySelector("#step-3").style.opacity = 0
 		document.querySelector("#step-3").hidden = true
+		initNextStep(null, 4)
 	},
 	4: () => {
 		resultsWindow.querySelector("#initial-lcc").innerHTML = phixer.result.initialLCC
