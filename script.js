@@ -647,25 +647,25 @@ function initNextStep(nextStep, nStepId) {
 			initNextStepLoaded(nextStep, nStepId)
 			break
 	}
-}
 
-function initNextStepLoaded(nextStep, nStepId) {
-	nextStep.hidden = false
-	footer.hidden = false
-
-	setTimeout(() => {
-		spinnerContainer.style.opacity = 0
-		nextStep.style.opacity = 1
-		footer.style.opacity = 1
-
-		initStep[nStepId]()
-
-		nextStep.ontransitionend = (e) => {
-			if (e.propertyName === "opacity") {
-				spinnerContainer.classList.add("visually-hidden")
+	function initNextStepLoaded(nextStep, nStepId) {
+		nextStep.hidden = false
+		footer.hidden = false
+	
+		setTimeout(() => {
+			spinnerContainer.style.opacity = 0
+			nextStep.style.opacity = 1
+			footer.style.opacity = 1
+	
+			initStep[nStepId]()
+	
+			nextStep.ontransitionend = (e) => {
+				if (e.propertyName === "opacity") {
+					spinnerContainer.classList.add("visually-hidden")
+				}
 			}
-		}
-	}, 50)
+		}, 50)
+	}
 }
 
 function setup() {
