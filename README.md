@@ -1,14 +1,5 @@
 # Phixer
 
-By Gregory Troinenko
+UoY Exam Number Y3903676
 
-## Notes
-
-- Use `Array.prototype.reduce()` for counting up the sum of the numbers in an array. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
-- JS file reader. https://www.digitalocean.com/community/tutorials/js-file-reader
-- UI design file in Figma. https://www.figma.com/file/PK3bqfJn1oxPfZ0euOUPO1/PHIxer-UI
-
-## Reference list
-
-1. http://www.aes.org/e-lib/browse.cfm?elib=708
-2. Figma icons: https://www.figma.com/community/file/942053544758339202
+This is PHIxer, the simple tool for fixing phase issues in recorded material. Tired of shifting tracks back and fourth in your DAW and checking the correlation meter after the not-so-perfect session? PHIxer has got you covered!

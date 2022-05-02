@@ -20,11 +20,11 @@
 
 1. Github. https://github.com
 2. Github Pages. https://github.io
-2. Figma Editor. https://figma.com
-3. Visual Studio Code. https://code.visualstudio.com
-4. Atom Code Editor. https://atom.io/
-5. Prettier for VS Code. https://prettier.io
-6. Favicon Generator. https://realfavicongenerator.net
+3. Figma Editor. https://figma.com
+4. Visual Studio Code. https://code.visualstudio.com
+5. Atom Code Editor. https://atom.io/
+6. Prettier for VS Code. https://prettier.io
+7. Favicon Generator. https://realfavicongenerator.net
 
 ## Assets
 
