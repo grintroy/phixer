@@ -340,7 +340,7 @@ class Phixer {
 						)
 						this.context.decodeAudioData(fileReader.result).then((buffer) => {
 							for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-								// The input file can be multichannel but it needs to include only one "." symbol
+								// The input file can be multichannel
 
 								const filename =
 									file.name.slice(0, -4) +
@@ -485,7 +485,7 @@ class Phixer {
 			1 // initial value
 		)
 
-		Math.realPow = function (x, y) {
+		Math.realPow = (x, y) => {
 			// From https://stackoverflow.com/questions/14575697/math-pow-with-negative-numbers-and-non-integer-powers?noredirect=1&lq=1
 			if (x > 0) return Math.pow(x, y)
 			return -1 * Math.pow(-x, y)
