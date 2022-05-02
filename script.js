@@ -1,11 +1,6 @@
 const inputFiles = []
 
-let phixer,
-	playerWavElement,
-	playerWavProgress,
-	playheadController,
-	playerButton,
-	renderPlayer
+let phixer, playerWavElement, playerWavProgress, playheadController, playerButton, renderPlayer
 
 const MAXDURATION = 60
 const SAMPLERATERANGE = {
@@ -14,7 +9,7 @@ const SAMPLERATERANGE = {
 }
 
 Number.prototype.map = function (in_min, in_max, out_min, out_max) {
-	// https://gist.github.com/xposedbones/75ebaef3c10060a3ee3b246166caab56
+	// From https://gist.github.com/xposedbones/75ebaef3c10060a3ee3b246166caab56
 	return ((this - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
 }
 
@@ -107,8 +102,8 @@ const initStep = {
 		uploadWindow.ondragover = (e) => dragOverHandler(e)
 		uploadWindow.ondragleave = (e) => dragLeaveHandler(e)
 
-		// https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
-		// https://stackoverflow.com/questions/11406605/how-to-make-a-link-act-as-a-file-input
+		// From https://stackoverflow.com/questions/35659430/how-do-i-programmatically-trigger-an-input-event-without-jquery
+		// and https://stackoverflow.com/questions/11406605/how-to-make-a-link-act-as-a-file-input
 
 		uploadFilesLink.addEventListener("click", (e) => {
 			e.preventDefault()
@@ -120,11 +115,10 @@ const initStep = {
 				inputFiles.push(file)
 				console.log("File(s) uploaded: " + file.name)
 			}
-			document.querySelector("#uploadedFilesCount").innerHTML =
-				inputFiles.length
+			document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
 		})
 
-		// https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
+		// From https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
 
 		function dropHandler(event) {
 			console.log("File(s) dropped")
@@ -145,16 +139,13 @@ const initStep = {
 			} else {
 				// Use DataTransfer interface to access the file(s)
 				for (let i = 0; i < event.dataTransfer.files.length; i++) {
-					console.log(
-						"... file[" + i + "].name = " + event.dataTransfer.files[i].name
-					)
+					console.log("... file[" + i + "].name = " + event.dataTransfer.files[i].name)
 				}
 			}
 
 			uploadWindow.style.borderWidth = null
 			uploadWindow.style.cursor = "default"
-			document.querySelector("#uploadedFilesCount").innerHTML =
-				inputFiles.length
+			document.querySelector("#uploadedFilesCount").innerHTML = inputFiles.length
 		}
 
 		function dragOverHandler(event) {
@@ -194,8 +185,7 @@ const initStep = {
 		}
 
 		playerButton = new PlayerButton(document.getElementById("player-button"))
-		document.getElementById("2-3-2-number").placeholder =
-			phixer.player.sampleRate
+		document.getElementById("2-3-2-number").placeholder = phixer.player.sampleRate
 
 		allRanges.forEach((wrap) => {
 			const range = wrap.querySelector(".form-range")
@@ -325,20 +315,13 @@ const initStep = {
 					let lineHeightsArray = []
 					const emptySpaceHeight = elHeight - yMargin * 2
 
-					for (
-						let i = 0;
-						i < durationSamples;
-						i += bandWidth * pixelToSampleRatio
-					) {
+					for (let i = 0; i < durationSamples; i += bandWidth * pixelToSampleRatio) {
 						const pixelX = i / pixelToSampleRatio
 
 						if (i < newData.length) {
 							const valSum = newData
 								.slice(Math.floor(i), Math.floor(i + waveformLookahead))
-								.reduce(
-									(prevVal, curVal) => Math.abs(prevVal) + Math.abs(curVal),
-									0
-								)
+								.reduce((prevVal, curVal) => Math.abs(prevVal) + Math.abs(curVal), 0)
 							const meanVal = valSum / waveformLookahead
 							const lineHeight = meanVal * yMarginCoef * elHeight
 							lineHeightsArray.push(lineHeight)
@@ -356,11 +339,7 @@ const initStep = {
 						lineHeightsArray[i] *= normalizationCoef
 					})
 
-					for (
-						let i = 0, j = 0;
-						i < newData.length;
-						i += bandWidth * pixelToSampleRatio, j++
-					) {
+					for (let i = 0, j = 0; i < newData.length; i += bandWidth * pixelToSampleRatio, j++) {
 						const pixelX = i / pixelToSampleRatio
 						const margin = (elHeight - lineHeightsArray[j]) / 2
 						p.line(pixelX, margin, pixelX, margin + lineHeightsArray[j])
@@ -368,11 +347,7 @@ const initStep = {
 
 					// Create a box indicating the end of the take
 
-					for (
-						let i = -emptySpaceHeight + emptySpacePointX;
-						i < elWidth;
-						i += bandWidth * 2
-					) {
+					for (let i = -emptySpaceHeight + emptySpacePointX; i < elWidth; i += bandWidth * 2) {
 						emptySpaceLinesArray.push({
 							x1: i,
 							y1: yMargin + emptySpaceHeight,
@@ -424,8 +399,8 @@ const initStep = {
 			}
 
 			function cloneCanvas(oldCanvas) {
-				// https://stackoverflow.com/questions/3318565/any-way-to-clone-html5-canvas-element-with-its-content
-				// https://stackoverflow.com/questions/45706829/change-color-image-in-canvas
+				// From https://stackoverflow.com/questions/3318565/any-way-to-clone-html5-canvas-element-with-its-content
+				// From https://stackoverflow.com/questions/45706829/change-color-image-in-canvas
 
 				// create a new canvas
 				var newCanvas = document.createElement("canvas")
@@ -440,9 +415,9 @@ const initStep = {
 
 				context.globalCompositeOperation = "source-in"
 
-				const color = getComputedStyle(
-					document.documentElement
-				).getPropertyValue("--bs-primary-rgb") // https://davidwalsh.name/css-variables-javascript
+				const color = getComputedStyle(document.documentElement).getPropertyValue(
+					"--bs-primary-rgb"
+				) // From https://davidwalsh.name/css-variables-javascript
 				context.fillStyle = `rgb(${color})`
 				context.fillRect(0, 0, newCanvas.width, newCanvas.height)
 
@@ -462,7 +437,7 @@ const initStep = {
 			function updateValues(element, otherElement) {
 				playerButton.stop()
 
-				// https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
+				// From https://stackoverflow.com/questions/6649327/regex-to-remove-letters-symbols-except-numbers
 
 				let value = element.value
 
@@ -490,13 +465,9 @@ const initStep = {
 				phixer.preferences[attribute] = timeInSec
 
 				if (
-					(attribute === "inPoint" &&
-						timeInSec > phixer.preferences.outPoint) ||
-					(attribute === "outPoint" &&
-						timeInSec < phixer.preferences.inPoint) ||
-					Math.abs(
-						phixer.preferences[attribute] - phixer.preferences[attribute2]
-					) > MAXDURATION
+					(attribute === "inPoint" && timeInSec > phixer.preferences.outPoint) ||
+					(attribute === "outPoint" && timeInSec < phixer.preferences.inPoint) ||
+					Math.abs(phixer.preferences[attribute] - phixer.preferences[attribute2]) > MAXDURATION
 				) {
 					phixer.preferences.duration = "—"
 					durationBlock.classList.remove("bg-light")
@@ -540,12 +511,8 @@ const initStep = {
 				return inputString
 			}
 
-			inPointElement.addEventListener("input", () =>
-				updateValues(inPointElement, outPointElement)
-			)
-			outPointElement.addEventListener("input", () =>
-				updateValues(outPointElement, inPointElement)
-			)
+			inPointElement.addEventListener("input", () => updateValues(inPointElement, outPointElement))
+			outPointElement.addEventListener("input", () => updateValues(outPointElement, inPointElement))
 		}
 
 		phixer.preferences.analysisSampleRate = phixer.player.sampleRate / 2
@@ -598,12 +565,8 @@ const initStep = {
 					if (attr === "analysisSampleRate") {
 						newValue =
 							Math.round(
-								Number(slider.value).map(
-									0,
-									100,
-									SAMPLERATERANGE.min,
-									phixer.player.sampleRate
-								) / 100
+								Number(slider.value).map(0, 100, SAMPLERATERANGE.min, phixer.player.sampleRate) /
+									100
 							) * 100
 					}
 
@@ -613,22 +576,17 @@ const initStep = {
 		}
 	},
 	3: () => {
-		document
-			.querySelectorAll('#step-3 input[name="output-format"]')
-			.forEach((radio) => {
-				radio.addEventListener("click", () => {
-					phixer.preferences.outputFormat = radio.getAttribute(
-						"phixer-output-format"
-					)
-				})
+		document.querySelectorAll('#step-3 input[name="output-format"]').forEach((radio) => {
+			radio.addEventListener("click", () => {
+				phixer.preferences.outputFormat = radio.getAttribute("phixer-output-format")
 			})
+		})
 	},
 	4: () => {
-		resultsWindow.querySelector("#initial-lcc").innerHTML =
-			phixer.result.initialLCC
-		resultsWindow.querySelector("#result-lcc").innerHTML = Number(
-			phixer.result.closestLCC
-		).toFixed(2)
+		resultsWindow.querySelector("#initial-lcc").innerHTML = phixer.result.initialLCC
+		resultsWindow.querySelector("#result-lcc").innerHTML = Number(phixer.result.closestLCC).toFixed(
+			2
+		)
 
 		let num
 		phixer.result.nudge.forEach((n, i) => {
@@ -642,9 +600,7 @@ const initStep = {
 			resultsWindow.querySelector("#sign").innerHTML = "-"
 		else resultsWindow.querySelector("#sign").innerHTML = "+"
 
-		resultsWindow.querySelector("#samples").innerHTML = Math.abs(
-			phixer.result.nudge[num]
-		)
+		resultsWindow.querySelector("#samples").innerHTML = Math.abs(phixer.result.nudge[num])
 
 		if (phixer.result.inverted) {
 			const invertedIcon = document.querySelector("#inverted")
@@ -721,9 +677,7 @@ function setup() {
 	spinnerContainer.style.opacity = 0
 
 	// Bootstrap Tooltips component
-	const tooltipTriggerList = [].slice.call(
-		document.querySelectorAll('[data-bs-toggle="tooltip"]')
-	)
+	const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 	const tooltipList = tooltipTriggerList.map((tooltipTriggerEl) => {
 		return new bootstrap.Tooltip(tooltipTriggerEl, {
 			boundary: document.body

@@ -39,12 +39,7 @@ class Phixer {
 			if (this.sampledPos !== tmp) {
 				this.sampledPos = tmp
 				const blank = this.resolution - this.sampledPos
-				console.log(
-					"Progress: [ " +
-						"■ ".repeat(this.sampledPos) +
-						"□ ".repeat(blank) +
-						"]"
-				)
+				console.log("Progress: [ " + "■ ".repeat(this.sampledPos) + "□ ".repeat(blank) + "]")
 			}
 		}
 
@@ -82,7 +77,7 @@ class Phixer {
 
 					console.log("Original LCC: " + initialAnalysis.lcc)
 
-					Array.prototype.slide = function (value) {
+					Array.prototype.slide = (value) => {
 						if (value == 0) return this
 						const segment1 = this.slice(0, -value)
 						const segment2 = this.slice(-value)
@@ -90,17 +85,12 @@ class Phixer {
 					}
 
 					const maxDispSamples =
-						this.preferences.maxDisplacement *
-						this.preferences.analysisSampleRate
+						this.preferences.maxDisplacement * this.preferences.analysisSampleRate
 
 					console.log(
-						"Resampled at " +
-							this.preferences.analysisSampleRate +
-							" samples per second."
+						"Resampled at " + this.preferences.analysisSampleRate + " samples per second."
 					)
-					console.log(
-						"Maximum displacement for matching (in samples): " + maxDispSamples
-					)
+					console.log("Maximum displacement for matching (in samples): " + maxDispSamples)
 
 					const nudgeMatrixTemplate = new Array(this.takes.length).fill(1)
 					nudgeMatrixTemplate[this.preferences.primaryTake] = 0
@@ -128,14 +118,11 @@ class Phixer {
 							)
 
 							if (
-								Math.abs(
-									analysisResults.lcc.toFixed(2) - this.preferences.targetLCC
-								) <
+								Math.abs(analysisResults.lcc.toFixed(2) - this.preferences.targetLCC) <
 								Math.abs(this.result.closestLCC - this.preferences.targetLCC)
 							) {
 								const resampleCoef =
-									phixer.preferences.originalSampleRate /
-									phixer.preferences.analysisSampleRate
+									phixer.preferences.originalSampleRate / phixer.preferences.analysisSampleRate
 
 								const convertedMatrix = []
 								preparedMatrix.forEach((cell) => {
@@ -146,9 +133,7 @@ class Phixer {
 								this.result.buffers = analysisResults.buffers
 								this.result.nudge = convertedMatrix
 								this.result.inverted = inverted
-								if (
-									analysisResults.lcc.toFixed(2) == this.preferences.targetLCC
-								) {
+								if (analysisResults.lcc.toFixed(2) == this.preferences.targetLCC) {
 									console.log("Matched to two decimal places.")
 									break main
 								}
@@ -222,27 +207,19 @@ class Phixer {
 	checkPreferences() {
 		return new Promise((resolve, reject) => {
 			const promise = new Promise((resolve, reject) => {
-				if (this.preferences.inPoint < 0 || this.preferences.outPoint < 0)
-					reject("in/out point.")
+				if (this.preferences.inPoint < 0 || this.preferences.outPoint < 0) reject("in/out point.")
 				if (this.preferences.outPoint - this.preferences.inPoint > 60)
 					reject("duration is over 60 seconds.")
-				if (
-					this.preferences.outPoint - this.preferences.inPoint !=
-					this.preferences.duration
-				)
+				if (this.preferences.outPoint - this.preferences.inPoint != this.preferences.duration)
 					reject("duration does not match to in/out points.")
 				if (this.preferences.targetLCC < 0 || this.preferences.targetLCC > 1)
 					reject("targetLCC is out of range.")
 				if (
 					this.preferences.analysisSampleRate < 3000 ||
-					this.preferences.analysisSampleRate >
-						this.takes[this.preferences.primaryTake].sampleRate
+					this.preferences.analysisSampleRate > this.takes[this.preferences.primaryTake].sampleRate
 				)
 					reject("analysisSampleRate is out of range.")
-				if (
-					this.preferences.primaryTake < 0 ||
-					this.preferences.primaryTake >= this.takes.length
-				)
+				if (this.preferences.primaryTake < 0 || this.preferences.primaryTake >= this.takes.length)
 					reject("primaryTake is out of range.")
 				if (!["none", "wav", "mp3"].includes(this.preferences.outputFormat))
 					reject("outputFormat out of range.")
@@ -272,8 +249,7 @@ class Phixer {
 	}
 
 	updateDuration() {
-		this.preferences.duration =
-			this.preferences.outPoint - this.preferences.inPoint
+		this.preferences.duration = this.preferences.outPoint - this.preferences.inPoint
 	}
 
 	static Take = class {
@@ -284,18 +260,11 @@ class Phixer {
 			this.sampleRate = sampleRate
 			this.parent = parent
 
-			this.audioBuffer = parent.convertToAudioBuffer(
-				buffer,
-				duration,
-				sampleRate
-			)
+			this.audioBuffer = parent.convertToAudioBuffer(buffer, duration, sampleRate)
 		}
 
 		initPlayer() {
-			this.player = new Tone.Player(
-				this.audioBuffer,
-				this.onload()
-			).toDestination()
+			this.player = new Tone.Player(this.audioBuffer, this.onload()).toDestination()
 			this.player.fadeIn = 0.03
 			this.player.fadeOut = 0.07
 			this.parent.player.connect(this.parent.takes[0])
@@ -342,7 +311,7 @@ class Phixer {
 
 			if (files.length === 0) reject("No files uploaded.")
 
-			// https://codepen.io/dmack/pen/VLxpyv
+			// From https://codepen.io/dmack/pen/VLxpyv
 
 			let fileCount = 1
 
@@ -369,12 +338,8 @@ class Phixer {
 							fileProperties.sampleRate
 						)
 						this.context.decodeAudioData(fileReader.result).then((buffer) => {
-							for (
-								let channel = 0;
-								channel < buffer.numberOfChannels;
-								channel++
-							) {
-								// The input file can be multichannel but it needs to include only one "." symbol
+							for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+								// The input file can be multichannel
 
 								const filename =
 									file.name.split(".")[0] +
@@ -418,7 +383,7 @@ class Phixer {
 	}
 
 	readProperties(buffer) {
-		// https://github.com/WebAudio/web-audio-api/issues/30#issuecomment-1090167849
+		// From https://github.com/WebAudio/web-audio-api/issues/30#issuecomment-1090167849
 
 		const view = new DataView(buffer)
 		const chunkCellSize = 4
@@ -457,11 +422,7 @@ class Phixer {
 	}
 
 	convertToAudioBuffer(arrayBuffer, duration, sampleRate) {
-		let audioBuffer = this.context.createBuffer(
-			1,
-			duration * sampleRate,
-			sampleRate
-		)
+		let audioBuffer = this.context.createBuffer(1, duration * sampleRate, sampleRate)
 		for (var i = 0; i < arrayBuffer.length; i++) {
 			audioBuffer.getChannelData(0)[i] = arrayBuffer[i]
 		}
@@ -474,9 +435,7 @@ class Phixer {
 		if (keepOriginal !== true) {
 			sampleRate = keepOriginal
 			for (let buffer of buffers) {
-				streams.push(
-					this.resample(this.changeLength(buffer, sampleRate), sampleRate)
-				)
+				streams.push(this.resample(this.changeLength(buffer, sampleRate), sampleRate))
 			}
 		} else streams = buffers
 		return { lcc: this.corellationValue(streams), buffers: streams }
@@ -487,11 +446,7 @@ class Phixer {
 
 		const resampleCoef = sampleRate / this.preferences.analysisSampleRate
 
-		for (
-			let sampleCounter = 0;
-			sampleCounter < stream.length / resampleCoef;
-			sampleCounter++
-		) {
+		for (let sampleCounter = 0; sampleCounter < stream.length / resampleCoef; sampleCounter++) {
 			newStream.push(stream[Math.floor(sampleCounter * resampleCoef)])
 		}
 
@@ -529,8 +484,8 @@ class Phixer {
 			1 // initial value
 		)
 
-		Math.realPow = function (x, y) {
-			// https://stackoverflow.com/questions/14575697/math-pow-with-negative-numbers-and-non-integer-powers?noredirect=1&lq=1
+		Math.realPow = (x, y) => {
+			// From https://stackoverflow.com/questions/14575697/math-pow-with-negative-numbers-and-non-integer-powers?noredirect=1&lq=1
 			if (x > 0) return Math.pow(x, y)
 			return -1 * Math.pow(-x, y)
 		}
