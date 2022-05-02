@@ -278,7 +278,7 @@ const initStep = {
 					}
 				}
 
-				renderPlayer = function () {
+				const renderPlayer = () => {
 					drawWaveform()
 					progressWavCanvasInit()
 				}
